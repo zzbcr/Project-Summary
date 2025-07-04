@@ -1,0 +1,313 @@
+/* 全局样式 */
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f8fafc;
+}
+
+/* 头像样式 - 修复居中问题 */
+.avatar-circle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 2rem; /* 32px */
+  height: 2rem;
+  border-radius: 50%;
+  overflow: hidden; /* 确保内容不会溢出圆形边界 */
+  flex-shrink: 0; /* 防止头像被压缩 */
+}
+
+.avatar-icon {
+  color: white;
+  font-size: 0.875rem; /* 14px */
+  line-height: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* 消息气泡样式 */
+.user-message .message-content {
+  background-color: #165DFF;
+  color: white;
+}
+
+.bot-message .message-content {
+  background-color: white;
+  color: #1D2129;
+}
+
+/* 输入框样式 */
+#userInput {
+  transition: all 0.2s ease;
+}
+
+#userInput:focus {
+  box-shadow: 0 0 0 3px rgba(22, 93, 255, 0.1);
+}
+
+/* 按钮悬停效果 */
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  transition: transform 0.1s ease;
+}
+
+/* 模态框动画 */
+.modal {
+  transition: opacity 0.2s ease;
+}
+
+.modal-content {
+  transform: translateY(20px);
+  transition: transform 0.2s ease;
+}
+
+.modal.active .modal-content {
+  transform: translateY(0);
+}
+
+/* 健康记录列表样式 */
+.temp-record {
+  transition: background-color 0.1s ease;
+}
+
+.temp-record:hover {
+  background-color: rgba(22, 93, 255, 0.05);
+}
+
+/* 标签切换效果 */
+.tab-btn {
+  transition: all 0.2s ease;
+}
+
+.tab-btn.active {
+  color: #165DFF;
+  border-bottom: 2px solid #165DFF;
+}
+
+/* 按钮组样式 */
+.btn-group {
+  display: flex;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.btn-group button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  border: none;
+  background-color: white;
+  color: #1D2129;
+  transition: all 0.2s ease;
+}
+
+.btn-group button:hover:not(.active) {
+  background-color: #f3f4f6;
+}
+
+.btn-group button.active {
+  background-color: #165DFF;
+  color: white;
+}
+
+/* 语音波形动画 */
+.voice-wave span {
+  height: 100%;
+  width: 2px;
+  margin: 0 1px;
+  background-color: white;
+  border-radius: 2px;
+  animation: wave 1.2s ease-in-out infinite;
+}
+
+.voice-wave span:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.voice-wave span:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.voice-wave span:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+.voice-wave span:nth-child(5) {
+  animation-delay: 0.4s;
+}
+
+@keyframes wave {
+  0%, 100% {
+    transform: scaleY(0.2);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* 输入框高度自适应 */
+textarea {
+  resize: none;
+  overflow: hidden;
+  min-height: 48px;
+}
+
+/* 温度图表样式 */
+.chart-container {
+  position: relative;
+  height: 300px;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* 加载动画 */
+.loading-spinner {
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top: 3px solid white;
+  width: 16px;
+  height: 16px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 平滑过渡效果 */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-in-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* 历史对话项样式 */
+.history-item {
+  position: relative;
+}
+
+.history-item .delete-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  color: #F53F3F;
+}
+
+.history-item:hover .delete-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 历史对话项被选中状态 */
+.history-item.active {
+  background-color: rgba(22, 93, 255, 0.1);
+}
+
+/* 删除确认模态框 */
+.delete-modal {
+  transition: opacity 0.2s ease;
+}
+
+.delete-modal-content {
+  transform: translateY(20px);
+  transition: transform 0.2s ease;
+}
+
+.delete-modal.active .delete-modal-content {
+  transform: translateY(0);
+}
+
+/* 自定义工具类 */
+.content-auto {
+  content-visibility: auto;
+}
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.typing-animation {
+  display: flex;
+  align-items: center;
+}
+.typing-animation span {
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #165DFF;
+  margin: 0 1px;
+  animation: typing 1.4s infinite ease-in-out both;
+}
+.typing-animation span:nth-child(1) {
+  animation-delay: 0s;
+}
+.typing-animation span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.typing-animation span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes typing {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+.pulse-ring {
+  box-shadow: 0 0 0 rgba(79, 70, 229, 0.4);
+  animation: pulse-ring 2s infinite;
+}
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(79, 70, 229, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+  }
+}

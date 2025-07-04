@@ -1,0 +1,26 @@
+
+# train: D:\Train_Custom_Dataset-main\Train_Custom_Dataset-main\关键点检测\汽车关键点检测\test_data\images\train
+# val: D:\Train_Custom_Dataset-main\Train_Custom_Dataset-main\关键点检测\汽车关键点检测\test_data\images\val
+# test: D:\Train_Custom_Dataset-main\Train_Custom_Dataset-main\关键点检测\汽车关键点检测\test_data\images\val
+ 
+# nc: 1 # 填写类别数
+ 
+# names: ["car"]  # 要和voc_label.py中的类别数目顺序一模一样
+ 
+# train,val,test的路径根据自己情况而定
+
+path: D:\Train_Custom_Dataset-main\Train_Custom_Dataset-main\关键点检测\汽车关键点检测\test_data
+
+# 训练集、验证集、测试集相对于 path 的路径（一般不用区分验证集和测试集，统称测试集）
+train: images/train
+val: images/val
+test: images/val
+
+# 3 种关键点，每个关键点有 X Y 是否可见 三个参数
+# 是否可见：2-可见不遮挡 1-遮挡 0-没有点
+# 第一个3表示关键点个数
+kpt_shape: [12, 3]
+
+# 框的类别（对于关键点检测，只有一类）
+names:
+  0: car #改名字

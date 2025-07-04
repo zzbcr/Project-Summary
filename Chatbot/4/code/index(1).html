@@ -1,0 +1,2592 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="zh-CN">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>心理健康对话助手</title>-->
+<!--    <script src="https://cdn.tailwindcss.com"></script>-->
+<!--    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">-->
+<!--    <script>-->
+<!--        tailwind.config = {-->
+<!--            theme: {-->
+<!--                extend: {-->
+<!--                    colors: {-->
+<!--                        primary: '#4F46E5',-->
+<!--                        secondary: '#EC4899',-->
+<!--                        neutral: '#1F2937',-->
+<!--                        'neutral-light': '#F3F4F6',-->
+<!--                        calm: '#E0F7FA',     // 平静：淡蓝色-->
+<!--                        anxious: '#FFEBEE',   // 焦虑：淡红色-->
+<!--                        sad: '#ECEFF1',       // 悲伤：淡灰色-->
+<!--                        happy: '#FFF3E0',     // 快乐：淡橙色-->
+<!--                        focused: '#E8F5E9',   // 专注：淡绿色-->
+<!--                    },-->
+<!--                    fontFamily: {-->
+<!--                        sans: ['Inter', 'system-ui', 'sans-serif'],-->
+<!--                    },-->
+<!--                }-->
+<!--            }-->
+<!--        }-->
+<!--    </script>-->
+<!--    <style type="text/tailwindcss">-->
+<!--        @layer utilities {-->
+<!--            .content-auto {-->
+<!--                content-visibility: auto;-->
+<!--            }-->
+<!--            .scrollbar-hide {-->
+<!--                -ms-overflow-style: none;-->
+<!--                scrollbar-width: none;-->
+<!--            }-->
+<!--            .scrollbar-hide::-webkit-scrollbar {-->
+<!--                display: none;-->
+<!--            }-->
+<!--            .message-bubble {-->
+<!--                @apply rounded-lg p-4 max-w-[80%] my-2 transition-all duration-300;-->
+<!--            }-->
+<!--            .message-bubble-user {-->
+<!--                @apply bg-primary text-white self-end rounded-br-none shadow-lg;-->
+<!--            }-->
+<!--            .message-bubble-bot {-->
+<!--                @apply bg-white text-neutral self-start rounded-bl-none shadow-md;-->
+<!--            }-->
+<!--        }-->
+<!--    </style>-->
+<!--    <style>-->
+<!--        /* 飘落元素动画 */-->
+<!--        .petals-container {-->
+<!--            position: fixed;-->
+<!--            top: 0;-->
+<!--            left: 0;-->
+<!--            width: 100%;-->
+<!--            height: 100%;-->
+<!--            pointer-events: none;-->
+<!--            z-index: -1;-->
+<!--        }-->
+
+<!--        .petal {-->
+<!--            position: absolute;-->
+<!--            background-color: rgba(150, 75, 0, 0.5); /* 落叶颜色 */-->
+<!--            border-radius: 100% 0 100% 0; /* 落叶形状 */-->
+<!--            transform: rotate(45deg); /* 旋转落叶 */-->
+<!--            animation: falling linear forwards;-->
+<!--        }-->
+
+<!--        @keyframes falling {-->
+<!--            0% {-->
+<!--                transform: translateY(-10px) rotate(0deg);-->
+<!--                opacity: 0.8;-->
+<!--            }-->
+<!--            100% {-->
+<!--                transform: translateY(calc(100vh + 10px)) rotate(360deg);-->
+<!--                opacity: 0;-->
+<!--            }-->
+<!--        }-->
+
+<!--        /* 动态背景 */-->
+<!--        .dynamic-bg {-->
+<!--            position: fixed;-->
+<!--            top: 0;-->
+<!--            left: 0;-->
+<!--            width: 100%;-->
+<!--            height: 100%;-->
+<!--            z-index: -2;-->
+<!--            transition: background-color 2s ease; /* 平滑过渡效果 */-->
+<!--        }-->
+
+<!--        /* 情绪颜色 */-->
+<!--        .bg-calm { background-color: #E0F7FA; }-->
+<!--        .bg-anxious { background-color: #FFEBEE; }-->
+<!--        .bg-sad { background-color: #ECEFF1; }-->
+<!--        .bg-happy { background-color: #FFF3E0; }-->
+<!--        .bg-focused { background-color: #E8F5E9; }-->
+<!--        .bg-neutral { background-color: #F0F2F5; }-->
+
+<!--        /* 设置聊天主区域半透明 */-->
+<!--        .chat-container {-->
+<!--            background-color: rgba(255, 255, 255, 0.7); /* 半透明白色 */-->
+<!--        }-->
+
+<!--        /* 语音按钮样式 */-->
+<!--        .voice-btn {-->
+<!--            @apply rounded-full p-3 transition-all duration-300 flex items-center justify-center;-->
+<!--        }-->
+
+<!--        .voice-btn-active {-->
+<!--            @apply bg-red-100 text-red-500;-->
+<!--        }-->
+
+<!--        .voice-btn-inactive {-->
+<!--            @apply bg-gray-100 text-gray-500 hover:bg-gray-200;-->
+<!--        }-->
+
+<!--        /* 其他样式保持不变... */-->
+<!--    </style>-->
+<!--</head>-->
+<!--<body class="font-sans overflow-x-hidden">-->
+<!--    &lt;!&ndash; 动态背景 &ndash;&gt;-->
+<!--    <div id="dynamic-bg" class="dynamic-bg bg-neutral"></div>-->
+
+<!--    &lt;!&ndash; 飘落元素容器 &ndash;&gt;-->
+<!--    <div class="petals-container"></div>-->
+
+<!--    <div class="container mx-auto px-4 py-8 max-w-4xl relative z-10">-->
+<!--        <header class="text-center mb-8">-->
+<!--            <h1 class="text-[clamp(2rem,5vw,3rem)] font-bold text-primary mb-2">心理健康对话助手</h1>-->
+<!--            <p class="text-gray-600 max-w-2xl mx-auto">一个专注于心理健康支持的AI对话系统，随时为您提供专业的情感陪伴和心理疏导</p>-->
+
+<!--            &lt;!&ndash; 背景颜色控制面板 &ndash;&gt;-->
+<!--            <div class="mt-4 flex justify-center space-x-2">-->
+<!--                <button class="color-btn w-6 h-6 rounded-full bg-calm border-2 border-white shadow-md hover:scale-110 transition-transform" data-color="calm"></button>-->
+<!--                <button class="color-btn w-6 h-6 rounded-full bg-anxious border-2 border-white shadow-md hover:scale-110 transition-transform" data-color="anxious"></button>-->
+<!--                <button class="color-btn w-6 h-6 rounded-full bg-sad border-2 border-white shadow-md hover:scale-110 transition-transform" data-color="sad"></button>-->
+<!--                <button class="color-btn w-6 h-6 rounded-full bg-happy border-2 border-white shadow-md hover:scale-110 transition-transform" data-color="happy"></button>-->
+<!--                <button class="color-btn w-6 h-6 rounded-full bg-focused border-2 border-white shadow-md hover:scale-110 transition-transform" data-color="focused"></button>-->
+<!--                <button class="color-btn w-6 h-6 rounded-full bg-neutral border-2 border-white shadow-md hover:scale-110 transition-transform" data-color="neutral"></button>-->
+<!--            </div>-->
+<!--        </header>-->
+
+<!--        &lt;!&ndash; 主聊天区域，添加半透明类 &ndash;&gt;-->
+<!--        <div class="bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all duration-300 hover:shadow-2xl chat-container">-->
+<!--            &lt;!&ndash; 聊天头部 &ndash;&gt;-->
+<!--            <div class="bg-primary text-white p-4 flex items-center justify-between">-->
+<!--                <div class="flex items-center">-->
+<!--                    <img src="{{ url_for('static', filename='res/img.png') }}" alt="心理健康助手头像" class="w-10 h-10 rounded-full mr-3 object-cover">-->
+<!--                    <div>-->
+<!--                        <h2 class="font-semibold text-lg">心灵伙伴</h2>-->
+<!--                        <p class="text-xs opacity-80">在线 - 随时为您服务</p>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                <div class="flex space-x-3">-->
+<!--                    <button class="text-white hover:text-white/80 transition-colors" id="info-button">-->
+<!--                        <i class="fa fa-info-circle"></i>-->
+<!--                    </button>-->
+<!--                    <button class="text-white hover:text-white/80 transition-colors" id="settings-button">-->
+<!--                        <i class="fa fa-cog"></i>-->
+<!--                    </button>-->
+<!--                </div>-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; 聊天消息区域 &ndash;&gt;-->
+<!--            <div id="chat-messages" class="h-[60vh] overflow-y-auto p-4 bg-neutral-light scrollbar-hide">-->
+<!--                &lt;!&ndash; 欢迎消息 &ndash;&gt;-->
+<!--                <div class="flex items-start mb-4">-->
+<!--                    <img src="{{ url_for('static', filename='res/img.png') }}" alt="心理健康助手头像" class="w-8 h-8 rounded-full mr-2 object-cover">-->
+<!--                    <div class="message-bubble message-bubble-bot">-->
+<!--                        <p>👋 你好！我是心灵伙伴，一个专注于心理健康的AI助手。</p>-->
+<!--                        <p class="mt-1">今天想和我聊些什么？你可以和我分享你的感受、压力或者困惑，我会在这里支持你。</p>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; 输入区域 &ndash;&gt;-->
+<!--            <div class="p-4 border-t border-gray-200">-->
+<!--                <div class="flex items-center space-x-2">-->
+<!--                    &lt;!&ndash; 语音输入按钮 &ndash;&gt;-->
+<!--                    <button id="voice-input-button" class="voice-btn voice-btn-inactive">-->
+<!--                        <i class="fa fa-microphone"></i>-->
+<!--                    </button>-->
+
+<!--                    <input type="text" id="message-input" placeholder="输入你的问题..."-->
+<!--                        class="flex-1 px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">-->
+
+<!--                    &lt;!&ndash; 语音输出按钮 &ndash;&gt;-->
+<!--                    <button id="voice-output-button" class="voice-btn voice-btn-inactive">-->
+<!--                        <i class="fa fa-volume-up"></i>-->
+<!--                    </button>-->
+
+<!--                    <button id="send-button" class="bg-primary text-white px-5 py-3 rounded-full hover:bg-primary/90 transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-300">-->
+<!--                        <i class="fa fa-paper-plane mr-1"></i> 发送-->
+<!--                    </button>-->
+<!--                </div>-->
+<!--                <div class="text-xs text-gray-500 mt-2 text-center">-->
+<!--                    <i class="fa fa-lock mr-1"></i> 您的对话内容将被严格保密-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+
+<!--        &lt;!&ndash; 快捷回复按钮 &ndash;&gt;-->
+<!--        <div id="quick-replies" class="mt-6 flex flex-wrap gap-2 justify-center">-->
+<!--            &lt;!&ndash; 快捷回复按钮将通过JavaScript动态加载 &ndash;&gt;-->
+<!--        </div>-->
+<!--    </div>-->
+
+<!--    <footer class="mt-12 text-center text-gray-500 text-sm pb-6 relative z-10">-->
+<!--        <p>© 2025 心理健康对话助手 | 专业心理支持服务</p>-->
+<!--        <p class="mt-1">如果您需要紧急帮助，请联系当地心理健康机构或拨打热线</p>-->
+<!--    </footer>-->
+
+<!--    <script>-->
+<!--        // 情绪关键词映射-->
+<!--        const emotionKeywords = {-->
+<!--            calm: ['平静', '放松', '安心', '冥想', '深呼吸'],-->
+<!--            anxious: ['焦虑', '担心', '紧张', '不安', '压力'],-->
+<!--            sad: ['难过', '悲伤', '低落', '抑郁', '孤独'],-->
+<!--            happy: ['开心', '快乐', '愉悦', '满意', '幸福'],-->
+<!--            focused: ['专注', '集中', '清晰', '目标', '效率']-->
+<!--        };-->
+
+<!--        // 当前背景颜色-->
+<!--        let currentColor = 'neutral';-->
+
+<!--        // 语音识别和语音合成对象-->
+<!--        let recognition = null;-->
+<!--        let isRecording = false;-->
+<!--        let isSpeaking = false;-->
+
+<!--        // 初始化页面-->
+<!--        document.addEventListener('DOMContentLoaded', function() {-->
+<!--            const messageInput = document.getElementById('message-input');-->
+<!--            const sendButton = document.getElementById('send-button');-->
+<!--            const chatMessages = document.getElementById('chat-messages');-->
+<!--            const quickRepliesContainer = document.getElementById('quick-replies');-->
+<!--            const infoButton = document.getElementById('info-button');-->
+<!--            const settingsButton = document.getElementById('settings-button');-->
+<!--            const dynamicBg = document.getElementById('dynamic-bg');-->
+<!--            const colorButtons = document.querySelectorAll('.color-btn');-->
+<!--            const voiceInputButton = document.getElementById('voice-input-button');-->
+<!--            const voiceOutputButton = document.getElementById('voice-output-button');-->
+
+<!--            let conversationHistory = [];-->
+
+<!--            // 检查浏览器是否支持语音识别-->
+<!--            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {-->
+<!--                // 初始化语音识别对象-->
+<!--                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();-->
+<!--                recognition.continuous = false;-->
+<!--                recognition.interimResults = true;-->
+<!--                recognition.lang = 'zh-CN';-->
+
+<!--                // 语音识别结果回调-->
+<!--                recognition.onresult = function(event) {-->
+<!--                    const transcript = Array.from(event.results)-->
+<!--                        .map(result => result[0].transcript)-->
+<!--                        .join('');-->
+
+<!--                    messageInput.value = transcript;-->
+
+<!--                    // 如果识别完成，则自动发送消息-->
+<!--                    if (event.results[0].isFinal) {-->
+<!--                        sendMessage();-->
+<!--                    }-->
+<!--                };-->
+
+<!--                // 语音识别错误回调-->
+<!--                recognition.onerror = function(event) {-->
+<!--                    console.error('语音识别错误:', event.error);-->
+<!--                    stopRecording();-->
+<!--                };-->
+
+<!--                // 语音识别结束回调-->
+<!--                recognition.onend = function() {-->
+<!--                    if (isRecording) {-->
+<!--                        recognition.start();-->
+<!--                    }-->
+<!--                };-->
+<!--            } else {-->
+<!--                // 不支持语音识别-->
+<!--                voiceInputButton.disabled = true;-->
+<!--                voiceInputButton.title = "您的浏览器不支持语音识别功能";-->
+<!--            }-->
+
+<!--            // 检查浏览器是否支持语音合成-->
+<!--            if ('speechSynthesis' in window) {-->
+<!--                // 语音合成按钮点击事件-->
+<!--                voiceOutputButton.addEventListener('click', toggleVoiceOutput);-->
+<!--            } else {-->
+<!--                // 不支持语音合成-->
+<!--                voiceOutputButton.disabled = true;-->
+<!--                voiceOutputButton.title = "您的浏览器不支持语音合成功能";-->
+<!--            }-->
+
+<!--            // 加载快捷回复-->
+<!--            loadQuickReplies();-->
+
+<!--            // 绑定颜色选择按钮事件-->
+<!--            colorButtons.forEach(button => {-->
+<!--                button.addEventListener('click', function() {-->
+<!--                    const color = this.getAttribute('data-color');-->
+<!--                    changeBackgroundColor(color);-->
+<!--                });-->
+<!--            });-->
+
+<!--            // 语音输入按钮点击事件-->
+<!--            voiceInputButton.addEventListener('click', toggleVoiceInput);-->
+
+<!--            // 发送消息函数-->
+<!--            function sendMessage() {-->
+<!--                const message = messageInput.value.trim();-->
+<!--                if (message === '') return;-->
+
+<!--                // 添加用户消息到聊天窗口-->
+<!--                appendMessage('user', message);-->
+
+<!--                // 分析用户情绪并改变背景颜色-->
+<!--                analyzeAndChangeColor(message);-->
+
+<!--                // 清空输入框-->
+<!--                messageInput.value = '';-->
+
+<!--                // 更新对话历史-->
+<!--                conversationHistory.push({-->
+<!--                    role: 'user',-->
+<!--                    content: message-->
+<!--                });-->
+
+<!--                // 滚动到底部-->
+<!--                scrollToBottom();-->
+
+<!--                // 显示"正在思考"状态-->
+<!--                showThinking();-->
+
+<!--                // 发送消息到后端API-->
+<!--                fetch('/api/chat', {-->
+<!--                    method: 'POST',-->
+<!--                    headers: {-->
+<!--                        'Content-Type': 'application/json'-->
+<!--                    },-->
+<!--                    body: JSON.stringify({-->
+<!--                        message: message,-->
+<!--                        history: conversationHistory-->
+<!--                    })-->
+<!--                })-->
+<!--                .then(response => response.json())-->
+<!--                .then(data => {-->
+<!--                    // 移除"正在思考"状态-->
+<!--                    removeThinking();-->
+
+<!--                    // 添加AI回复到聊天窗口-->
+<!--                    appendMessage('bot', data.reply);-->
+
+<!--                    // 根据AI回复的情绪调整背景颜色-->
+<!--                    if (data.emotion) {-->
+<!--                        changeBackgroundColor(data.emotion);-->
+<!--                    }-->
+
+<!--                    // 更新对话历史-->
+<!--                    conversationHistory.push({-->
+<!--                        role: 'bot',-->
+<!--                        content: data.reply-->
+<!--                    });-->
+
+<!--                    // 滚动到底部-->
+<!--                    scrollToBottom();-->
+
+<!--                    // 如果开启了语音输出，则朗读AI回复-->
+<!--                    if (voiceOutputButton.classList.contains('voice-btn-active')) {-->
+<!--                        speakText(data.reply);-->
+<!--                    }-->
+<!--                })-->
+<!--                .catch(error => {-->
+<!--                    console.error('Error:', error);-->
+<!--                    removeThinking();-->
+<!--                    appendMessage('bot', '抱歉，我遇到了一些技术问题，无法回答您的问题。请稍后再试。');-->
+<!--                });-->
+<!--            }-->
+
+<!--            // 添加消息到聊天窗口-->
+<!--            function appendMessage(sender, message) {-->
+<!--                const messageDiv = document.createElement('div');-->
+<!--                messageDiv.className = `flex items-start mb-4 ${sender === 'user' ? 'justify-end' : ''}`;-->
+
+<!--                if (sender === 'user') {-->
+<!--                    messageDiv.innerHTML = `-->
+<!--                        <div class="message-bubble message-bubble-user">-->
+<!--                            <p>${message}</p>-->
+<!--                        </div>-->
+<!--                        <img src="{{ url_for('static', filename='res/img_1.png') }}" alt="用户头像" class="w-8 h-8 rounded-full ml-2 object-cover">-->
+<!--                    `;-->
+<!--                } else {-->
+<!--                    messageDiv.innerHTML = `-->
+<!--                        <img src="{{ url_for('static', filename='res/img.png') }}" alt="心理健康助手头像" class="w-8 h-8 rounded-full mr-2 object-cover">-->
+<!--                        <div class="message-bubble message-bubble-bot">-->
+<!--                            <p>${message}</p>-->
+<!--                        </div>-->
+<!--                    `;-->
+<!--                }-->
+
+<!--                chatMessages.appendChild(messageDiv);-->
+<!--            }-->
+
+<!--            // 显示"正在思考"状态-->
+<!--            function showThinking() {-->
+<!--                const thinkingDiv = document.createElement('div');-->
+<!--                thinkingDiv.className = 'flex items-start mb-4';-->
+<!--                thinkingDiv.id = 'thinking';-->
+<!--                thinkingDiv.innerHTML = `-->
+<!--                    <img src="{{ url_for('static', filename='res/img.png') }}" alt="心理健康助手头像" class="w-8 h-8 rounded-full mr-2 object-cover">-->
+<!--                    <div class="message-bubble message-bubble-bot">-->
+<!--                        <div class="flex space-x-1">-->
+<!--                            <div class="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>-->
+<!--                            <div class="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>-->
+<!--                            <div class="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                `;-->
+
+<!--                chatMessages.appendChild(thinkingDiv);-->
+<!--                scrollToBottom();-->
+<!--            }-->
+
+<!--            // 移除"正在思考"状态-->
+<!--            function removeThinking() {-->
+<!--                const thinkingDiv = document.getElementById('thinking');-->
+<!--                if (thinkingDiv) {-->
+<!--                    thinkingDiv.remove();-->
+<!--                }-->
+<!--            }-->
+
+<!--            // 滚动到底部-->
+<!--            function scrollToBottom() {-->
+<!--                chatMessages.scrollTop = chatMessages.scrollHeight;-->
+<!--            }-->
+
+<!--            // 加载快捷回复-->
+<!--            function loadQuickReplies() {-->
+<!--                fetch('/api/quick_replies')-->
+<!--                .then(response => response.json())-->
+<!--                .then(data => {-->
+<!--                    // 清空现有快捷回复-->
+<!--                    quickRepliesContainer.innerHTML = '';-->
+
+<!--                    // 添加新的快捷回复-->
+<!--                    Object.values(data).forEach(category => {-->
+<!--                        category.forEach(reply => {-->
+<!--                            const button = document.createElement('button');-->
+<!--                            button.className = 'quick-reply bg-white text-neutral px-4 py-2 rounded-full shadow hover:shadow-md transition-all text-sm';-->
+<!--                            button.textContent = reply;-->
+
+<!--                            button.addEventListener('click', function() {-->
+<!--                                messageInput.value = this.textContent.trim();-->
+<!--                                sendMessage();-->
+<!--                                // 分析快捷回复的情绪并改变背景颜色-->
+<!--                                analyzeAndChangeColor(this.textContent.trim());-->
+<!--                            });-->
+
+<!--                            quickRepliesContainer.appendChild(button);-->
+<!--                        });-->
+<!--                    });-->
+<!--                })-->
+<!--                .catch(error => {-->
+<!--                    console.error('Error loading quick replies:', error);-->
+<!--                });-->
+<!--            }-->
+
+<!--            // 绑定发送按钮点击事件-->
+<!--            sendButton.addEventListener('click', sendMessage);-->
+
+<!--            // 绑定回车键发送消息-->
+<!--            messageInput.addEventListener('keypress', function(e) {-->
+<!--                if (e.key === 'Enter') {-->
+<!--                    sendMessage();-->
+<!--                }-->
+<!--            });-->
+
+<!--            // 绑定信息和设置按钮事件-->
+<!--            infoButton.addEventListener('click', function() {-->
+<!--                alert('心理健康对话助手 v1.0\n\n本应用旨在提供情感支持和心理疏导，不能替代专业心理咨询服务。');-->
+<!--            });-->
+
+<!--            settingsButton.addEventListener('click', function() {-->
+<!--                alert('设置功能即将推出，敬请期待！');-->
+<!--            });-->
+
+<!--            // 自动聚焦到输入框-->
+<!--            messageInput.focus();-->
+
+<!--            // 创建飘落元素-->
+<!--            createPetals();-->
+<!--        });-->
+
+<!--        // 语音输入切换函数-->
+<!--        function toggleVoiceInput() {-->
+<!--            if (!recognition) return;-->
+
+<!--            if (isRecording) {-->
+<!--                stopRecording();-->
+<!--            } else {-->
+<!--                startRecording();-->
+<!--            }-->
+<!--        }-->
+
+<!--        // 开始录音-->
+<!--        function startRecording() {-->
+<!--            isRecording = true;-->
+<!--            recognition.start();-->
+<!--            const voiceInputButton = document.getElementById('voice-input-button');-->
+<!--            voiceInputButton.classList.remove('voice-btn-inactive');-->
+<!--            voiceInputButton.classList.add('voice-btn-active');-->
+<!--            voiceInputButton.innerHTML = '<i class="fa fa-microphone-slash"></i>';-->
+<!--        }-->
+
+<!--        // 停止录音-->
+<!--        function stopRecording() {-->
+<!--            isRecording = false;-->
+<!--            recognition.stop();-->
+<!--            const voiceInputButton = document.getElementById('voice-input-button');-->
+<!--            voiceInputButton.classList.remove('voice-btn-active');-->
+<!--            voiceInputButton.classList.add('voice-btn-inactive');-->
+<!--            voiceInputButton.innerHTML = '<i class="fa fa-microphone"></i>';-->
+<!--        }-->
+
+<!--        // 语音输出切换函数-->
+<!--        function toggleVoiceOutput() {-->
+<!--            const voiceOutputButton = document.getElementById('voice-output-button');-->
+
+<!--            if (isSpeaking) {-->
+<!--                // 停止朗读-->
+<!--                speechSynthesis.cancel();-->
+<!--                isSpeaking = false;-->
+<!--                voiceOutputButton.classList.remove('voice-btn-active');-->
+<!--                voiceOutputButton.classList.add('voice-btn-inactive');-->
+<!--            } else {-->
+<!--                // 开始朗读最后一条AI回复-->
+<!--                const messages = document.querySelectorAll('.message-bubble-bot');-->
+<!--                if (messages.length > 0) {-->
+<!--                    const lastMessage = messages[messages.length - 1].querySelector('p').textContent;-->
+<!--                    speakText(lastMessage);-->
+<!--                    voiceOutputButton.classList.remove('voice-btn-inactive');-->
+<!--                    voiceOutputButton.classList.add('voice-btn-active');-->
+<!--                }-->
+<!--            }-->
+<!--        }-->
+
+<!--        // 朗读文本-->
+<!--        function speakText(text) {-->
+<!--            // 停止当前朗读-->
+<!--            speechSynthesis.cancel();-->
+
+<!--            // 创建语音合成实例-->
+<!--            const utterance = new SpeechSynthesisUtterance(text);-->
+
+<!--            // 设置语言和语速-->
+<!--            utterance.lang = 'zh-CN';-->
+<!--            utterance.rate = 1.0;-->
+<!--            utterance.pitch = 1.0;-->
+
+<!--            // 设置回调-->
+<!--            utterance.onstart = function() {-->
+<!--                isSpeaking = true;-->
+<!--                const voiceOutputButton = document.getElementById('voice-output-button');-->
+<!--                voiceOutputButton.classList.remove('voice-btn-inactive');-->
+<!--                voiceOutputButton.classList.add('voice-btn-active');-->
+<!--            };-->
+
+<!--            utterance.onend = function() {-->
+<!--                isSpeaking = false;-->
+<!--                const voiceOutputButton = document.getElementById('voice-output-button');-->
+<!--                voiceOutputButton.classList.remove('voice-btn-active');-->
+<!--                voiceOutputButton.classList.add('voice-btn-inactive');-->
+<!--            };-->
+
+<!--            utterance.onerror = function() {-->
+<!--                isSpeaking = false;-->
+<!--                const voiceOutputButton = document.getElementById('voice-output-button');-->
+<!--                voiceOutputButton.classList.remove('voice-btn-active');-->
+<!--                voiceOutputButton.classList.add('voice-btn-inactive');-->
+<!--            };-->
+
+<!--            // 开始朗读-->
+<!--            speechSynthesis.speak(utterance);-->
+<!--        }-->
+
+<!--        // 分析文本并改变背景颜色-->
+<!--        function analyzeAndChangeColor(text) {-->
+<!--            let emotion = 'neutral';-->
+
+<!--            // 检查文本中是否包含情绪关键词-->
+<!--            for (const [key, keywords] of Object.entries(emotionKeywords)) {-->
+<!--                if (keywords.some(word => text.includes(word))) {-->
+<!--                    emotion = key;-->
+<!--                    break;-->
+<!--                }-->
+<!--            }-->
+
+<!--            // 改变背景颜色-->
+<!--            changeBackgroundColor(emotion);-->
+<!--        }-->
+
+<!--        // 改变背景颜色-->
+<!--        function changeBackgroundColor(color) {-->
+<!--            const dynamicBg = document.getElementById('dynamic-bg');-->
+
+<!--            // 移除当前颜色类-->
+<!--            dynamicBg.classList.remove(`bg-${currentColor}`);-->
+
+<!--            // 添加新的颜色类-->
+<!--            dynamicBg.classList.add(`bg-${color}`);-->
+
+<!--            // 更新当前颜色-->
+<!--            currentColor = color;-->
+
+<!--            // 更新颜色选择按钮的激活状态-->
+<!--            document.querySelectorAll('.color-btn').forEach(btn => {-->
+<!--                if (btn.getAttribute('data-color') === color) {-->
+<!--                    btn.classList.add('ring-2', 'ring-primary', 'ring-offset-2');-->
+<!--                } else {-->
+<!--                    btn.classList.remove('ring-2', 'ring-primary', 'ring-offset-2');-->
+<!--                }-->
+<!--            });-->
+<!--        }-->
+
+<!--        // 创建飘落元素-->
+<!--        function createPetals() {-->
+<!--            const container = document.querySelector('.petals-container');-->
+<!--            const count = 50; // 增加初始落叶数量-->
+
+<!--            // 清空现有花瓣-->
+<!--            container.innerHTML = '';-->
+
+<!--            // 创建新花瓣-->
+<!--            for (let i = 0; i < count; i++) {-->
+<!--                createSinglePetal(container);-->
+<!--            }-->
+
+<!--            // 定期添加新花瓣-->
+<!--            setInterval(() => {-->
+<!--                createSinglePetal(container);-->
+<!--            }, 500); // 每500毫秒添加一个新花瓣，增加落叶密度-->
+<!--        }-->
+
+<!--        // 创建单个花瓣的函数-->
+<!--        function createSinglePetal(container) {-->
+<!--            const petal = document.createElement('div');-->
+<!--            petal.className = 'petal';-->
+
+<!--            // 根据当前背景颜色调整花瓣颜色-->
+<!--            const colorMap = {-->
+<!--                calm: 'rgba(0, 188, 212, 0.2)',-->
+<!--                anxious: 'rgba(239, 83, 80, 0.2)',-->
+<!--                sad: 'rgba(158, 158, 158, 0.2)',-->
+<!--                happy: 'rgba(255, 152, 0, 0.2)',-->
+<!--                focused: 'rgba(76, 175, 80, 0.2)',-->
+<!--                neutral: 'rgba(150, 75, 0, 0.5)' // 落叶颜色-->
+<!--            };-->
+
+<!--            const size = Math.random() * 20 + 10;-->
+<!--            const left = Math.random() * 100;-->
+<!--            const duration = Math.random() * 30 + 20;-->
+<!--            const delay = Math.random() * 10;-->
+
+<!--            petal.style.width = `${size}px`;-->
+<!--            petal.style.height = `${size * 0.6}px`;-->
+<!--            petal.style.left = `${left}%`;-->
+<!--            petal.style.animationDuration = `${duration}s`;-->
+<!--            petal.style.animationDelay = `${delay}s`;-->
+<!--            petal.style.backgroundColor = colorMap[currentColor] || colorMap.neutral;-->
+
+<!--            container.appendChild(petal);-->
+
+<!--            // 移除已完成动画的花瓣，并立即创建一个新的花瓣-->
+<!--            setTimeout(() => {-->
+<!--                if (petal.parentNode === container) {-->
+<!--                    container.removeChild(petal);-->
+<!--                    createSinglePetal(container);-->
+<!--                }-->
+<!--            }, duration * 1000);-->
+<!--        }-->
+<!--    </script>-->
+<!--</body>-->
+<!--</html>-->
+
+
+
+<!--<!DOCTYPE html>-->
+<!--<html lang="zh-CN">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>心理健康对话助手</title>-->
+<!--    <script src="https://cdn.tailwindcss.com"></script>-->
+<!--    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">-->
+<!--    <script>-->
+<!--        tailwind.config = {-->
+<!--            theme: {-->
+<!--                extend: {-->
+<!--                    colors: {-->
+<!--                        primary: '#4F46E5',-->
+<!--                        secondary: '#EC4899',-->
+<!--                        neutral: '#1F2937',-->
+<!--                        'neutral-light': '#F3F4F6',-->
+<!--                        calm: '#E0F7FA',     // 平静：淡蓝色-->
+<!--                        anxious: '#FFEBEE',   // 焦虑：淡红色-->
+<!--                        sad: '#ECEFF1',       // 悲伤：淡灰色-->
+<!--                        happy: '#FFF3E0',     // 快乐：淡橙色-->
+<!--                        focused: '#E8F5E9',   // 专注：淡绿色-->
+<!--                    },-->
+<!--                    fontFamily: {-->
+<!--                        sans: ['Inter', 'system-ui', 'sans-serif'],-->
+<!--                    },-->
+<!--                }-->
+<!--            }-->
+<!--        }-->
+<!--    </script>-->
+<!--    <style type="text/tailwindcss">-->
+<!--        @layer utilities {-->
+<!--            .content-auto {-->
+<!--                content-visibility: auto;-->
+<!--            }-->
+<!--            .scrollbar-hide {-->
+<!--                -ms-overflow-style: none;-->
+<!--                scrollbar-width: none;-->
+<!--            }-->
+<!--            .scrollbar-hide::-webkit-scrollbar {-->
+<!--                display: none;-->
+<!--            }-->
+<!--            .message-bubble {-->
+<!--                @apply rounded-lg p-4 max-w-[80%] my-2 transition-all duration-300;-->
+<!--            }-->
+<!--            .message-bubble-user {-->
+<!--                @apply bg-primary text-white self-end rounded-br-none shadow-lg;-->
+<!--            }-->
+<!--            .message-bubble-bot {-->
+<!--                @apply bg-white text-neutral self-start rounded-bl-none shadow-md;-->
+<!--            }-->
+<!--        }-->
+<!--    </style>-->
+<!--    <style>-->
+<!--        /* 飘落元素动画 */-->
+<!--        .petals-container {-->
+<!--            position: fixed;-->
+<!--            top: 0;-->
+<!--            left: 0;-->
+<!--            width: 100%;-->
+<!--            height: 100%;-->
+<!--            pointer-events: none;-->
+<!--            z-index: -1;-->
+<!--        }-->
+
+<!--        .petal {-->
+<!--            position: absolute;-->
+<!--            background-color: rgba(150, 75, 0, 0.5); /* 落叶颜色 */-->
+<!--            border-radius: 100% 0 100% 0; /* 落叶形状 */-->
+<!--            transform: rotate(45deg); /* 旋转落叶 */-->
+<!--            animation: falling linear forwards;-->
+<!--        }-->
+
+<!--        @keyframes falling {-->
+<!--            0% {-->
+<!--                transform: translateY(-10px) rotate(0deg);-->
+<!--                opacity: 0.8;-->
+<!--            }-->
+<!--            100% {-->
+<!--                transform: translateY(calc(100vh + 10px)) rotate(360deg);-->
+<!--                opacity: 0;-->
+<!--            }-->
+<!--        }-->
+
+<!--        /* 动态背景 */-->
+<!--        .dynamic-bg {-->
+<!--            position: fixed;-->
+<!--            top: 0;-->
+<!--            left: 0;-->
+<!--            width: 100%;-->
+<!--            height: 100%;-->
+<!--            z-index: -2;-->
+<!--            transition: background-color 2s ease; /* 平滑过渡效果 */-->
+<!--        }-->
+
+<!--        /* 语音播放控件 */-->
+<!--        .audio-control {-->
+<!--            @apply flex items-center space-x-2 mt-2 text-sm text-gray-600;-->
+<!--        }-->
+
+<!--        .audio-button {-->
+<!--            @apply p-1.5 rounded-full hover:bg-gray-100 transition-colors;-->
+<!--        }-->
+
+<!--        .voice-loading {-->
+<!--            @apply animate-spin;-->
+<!--        }-->
+
+<!--        /* 其他样式保持不变 */-->
+<!--    </style>-->
+<!--</head>-->
+<!--<body class="font-sans overflow-x-hidden">-->
+<!--    &lt;!&ndash; 动态背景 &ndash;&gt;-->
+<!--    <div id="dynamic-bg" class="dynamic-bg bg-neutral"></div>-->
+
+<!--    &lt;!&ndash; 飘落元素容器 &ndash;&gt;-->
+<!--    <div class="petals-container"></div>-->
+
+<!--    <div class="container mx-auto px-4 py-8 max-w-4xl relative z-10">-->
+<!--        <header class="text-center mb-8">-->
+<!--            <h1 class="text-[clamp(2rem,5vw,3rem)] font-bold text-primary mb-2">心理健康对话助手</h1>-->
+<!--            <p class="text-gray-600 max-w-2xl mx-auto">一个专注于心理健康支持的AI对话系统，随时为您提供专业的情感陪伴和心理疏导</p>-->
+
+<!--            &lt;!&ndash; 背景颜色控制面板 &ndash;&gt;-->
+<!--            <div class="mt-4 flex justify-center space-x-2">-->
+<!--                <button class="color-btn w-6 h-6 rounded-full bg-calm border-2 border-white shadow-md hover:scale-110 transition-transform" data-color="calm"></button>-->
+<!--                <button class="color-btn w-6 h-6 rounded-full bg-anxious border-2 border-white shadow-md hover:scale-110 transition-transform" data-color="anxious"></button>-->
+<!--                <button class="color-btn w-6 h-6 rounded-full bg-sad border-2 border-white shadow-md hover:scale-110 transition-transform" data-color="sad"></button>-->
+<!--                <button class="color-btn w-6 h-6 rounded-full bg-happy border-2 border-white shadow-md hover:scale-110 transition-transform" data-color="happy"></button>-->
+<!--                <button class="color-btn w-6 h-6 rounded-full bg-focused border-2 border-white shadow-md hover:scale-110 transition-transform" data-color="focused"></button>-->
+<!--                <button class="color-btn w-6 h-6 rounded-full bg-neutral border-2 border-white shadow-md hover:scale-110 transition-transform" data-color="neutral"></button>-->
+<!--            </div>-->
+<!--        </header>-->
+
+<!--        &lt;!&ndash; 主聊天区域，添加半透明类 &ndash;&gt;-->
+<!--        <div class="bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all duration-300 hover:shadow-2xl chat-container">-->
+<!--            &lt;!&ndash; 聊天头部 &ndash;&gt;-->
+<!--            <div class="bg-primary text-white p-4 flex items-center justify-between">-->
+<!--                <div class="flex items-center">-->
+<!--                    <img src="{{ url_for('static', filename='res/img.png') }}" alt="心理健康助手头像" class="w-10 h-10 rounded-full mr-3 object-cover">-->
+<!--                    <div>-->
+<!--                        <h2 class="font-semibold text-lg">心灵伙伴</h2>-->
+<!--                        <p class="text-xs opacity-80">在线 - 随时为您服务</p>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                <div class="flex space-x-3">-->
+<!--                    <button class="text-white hover:text-white/80 transition-colors" id="info-button">-->
+<!--                        <i class="fa fa-info-circle"></i>-->
+<!--                    </button>-->
+<!--                    <button class="text-white hover:text-white/80 transition-colors" id="settings-button">-->
+<!--                        <i class="fa fa-cog"></i>-->
+<!--                    </button>-->
+<!--                </div>-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; 聊天消息区域 &ndash;&gt;-->
+<!--            <div id="chat-messages" class="h-[60vh] overflow-y-auto p-4 bg-neutral-light scrollbar-hide">-->
+<!--                &lt;!&ndash; 欢迎消息 &ndash;&gt;-->
+<!--                <div class="flex items-start mb-4">-->
+<!--                    <img src="{{ url_for('static', filename='res/img.png') }}" alt="心理健康助手头像" class="w-8 h-8 rounded-full mr-2 object-cover">-->
+<!--                    <div class="message-bubble message-bubble-bot">-->
+<!--                        <p>👋 你好！我是心灵伙伴，一个专注于心理健康的AI助手。</p>-->
+<!--                        <p class="mt-1">今天想和我聊些什么？你可以和我分享你的感受、压力或者困惑，我会在这里支持你。</p>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; 输入区域 &ndash;&gt;-->
+<!--            <div class="p-4 border-t border-gray-200">-->
+<!--                                <div class="flex items-center space-x-2">-->
+<!--                    &lt;!&ndash; 语音输入按钮 &ndash;&gt;-->
+<!--                    <button id="voice-input-button" class="voice-btn voice-btn-inactive" title="点击开始语音输入">-->
+<!--                        <i class="fa fa-microphone"></i>-->
+<!--                    </button>-->
+
+<!--                    <input type="text" id="message-input" placeholder="输入你的问题..."-->
+<!--                        class="flex-1 px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">-->
+
+<!--                    &lt;!&ndash; 语音输出按钮 &ndash;&gt;-->
+<!--                    <button id="voice-output-button" class="voice-btn voice-btn-inactive" title="点击播放语音回复">-->
+<!--                        <i class="fa fa-volume-up"></i>-->
+<!--                    </button>-->
+
+<!--                    <button id="send-button" class="bg-primary text-white px-5 py-3 rounded-full hover:bg-primary/90 transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-300">-->
+<!--                        <i class="fa fa-paper-plane mr-1"></i> 发送-->
+<!--                    </button>-->
+<!--                </div>-->
+<!--                <div class="text-xs text-gray-500 mt-2 text-center">-->
+<!--                    <i class="fa fa-lock mr-1"></i> 您的对话内容将被严格保密-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+
+<!--        &lt;!&ndash; 快捷回复按钮 &ndash;&gt;-->
+<!--        <div id="quick-replies" class="mt-6 flex flex-wrap gap-2 justify-center">-->
+<!--            &lt;!&ndash; 快捷回复按钮将通过JavaScript动态加载 &ndash;&gt;-->
+<!--        </div>-->
+<!--    </div>-->
+
+<!--    <footer class="mt-12 text-center text-gray-500 text-sm pb-6 relative z-10">-->
+<!--        <p>© 2025 心理健康对话助手 | 专业心理支持服务</p>-->
+<!--        <p class="mt-1">如果您需要紧急帮助，请联系当地心理健康机构或拨打热线</p>-->
+<!--    </footer>-->
+
+<!--    <script>-->
+<!--        // 情绪关键词映射-->
+<!--        const emotionKeywords = {-->
+<!--            calm: ['平静', '放松', '安心', '冥想', '深呼吸'],-->
+<!--            anxious: ['焦虑', '担心', '紧张', '不安', '压力'],-->
+<!--            sad: ['难过', '悲伤', '低落', '抑郁', '孤独'],-->
+<!--            happy: ['开心', '快乐', '愉悦', '满意', '幸福'],-->
+<!--            focused: ['专注', '集中', '清晰', '目标', '效率']-->
+<!--        };-->
+
+<!--        // 当前背景颜色-->
+<!--        let currentColor = 'neutral';-->
+
+<!--        // 语音识别和语音合成对象-->
+<!--        let recognition = null;-->
+<!--        let isRecording = false;-->
+<!--        let isSpeaking = false;-->
+<!--        let audioContext = null;-->
+<!--        let conversationHistory = [];-->
+
+<!--        // 初始化页面-->
+<!--        document.addEventListener('DOMContentLoaded', function() {-->
+<!--            const messageInput = document.getElementById('message-input');-->
+<!--            const sendButton = document.getElementById('send-button');-->
+<!--            const chatMessages = document.getElementById('chat-messages');-->
+<!--            const quickRepliesContainer = document.getElementById('quick-replies');-->
+<!--            const infoButton = document.getElementById('info-button');-->
+<!--            const settingsButton = document.getElementById('settings-button');-->
+<!--            const dynamicBg = document.getElementById('dynamic-bg');-->
+<!--            const colorButtons = document.querySelectorAll('.color-btn');-->
+<!--            const voiceInputButton = document.getElementById('voice-input-button');-->
+<!--            const voiceOutputButton = document.getElementById('voice-output-button');-->
+
+<!--            // 检查浏览器是否支持语音识别-->
+<!--            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {-->
+<!--                // 初始化语音识别对象-->
+<!--                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();-->
+<!--                recognition.continuous = false;-->
+<!--                recognition.interimResults = true;-->
+<!--                recognition.lang = 'zh-CN';-->
+
+<!--                // 语音识别结果回调-->
+<!--                recognition.onresult = function(event) {-->
+<!--                    const transcript = Array.from(event.results)-->
+<!--                        .map(result => result[0].transcript)-->
+<!--                        .join('');-->
+
+<!--                    messageInput.value = transcript;-->
+
+<!--                    // 如果识别完成，则自动发送消息-->
+<!--                    if (event.results[0].isFinal) {-->
+<!--                        sendMessage();-->
+<!--                    }-->
+<!--                };-->
+
+<!--                // 语音识别错误回调-->
+<!--                // 语音识别错误处理-->
+<!--                recognition.onerror = function(event) {-->
+<!--                    let errorMsg = '语音识别错误';-->
+<!--                    if (event.error === 'not-allowed') {-->
+<!--                        errorMsg = '请允许网站使用麦克风权限';-->
+<!--                    } else if (event.error === 'audio-capture') {-->
+<!--                        errorMsg = '无法获取音频输入，请检查麦克风';-->
+<!--                    } else if (event.error === 'no-speech') {-->
+<!--                        errorMsg = '未检测到语音，请重试';-->
+<!--                    }-->
+<!--                    console.error(errorMsg, event);-->
+<!--                    stopRecording();-->
+<!--                    showNotification(errorMsg);-->
+<!--                };-->
+
+<!--                // 检查麦克风权限-->
+<!--            function checkMicrophonePermission() {-->
+<!--                if (!recognition) return false;-->
+<!--                // 模拟检查权限状态（实际需根据浏览器API调整）-->
+<!--                return navigator.permissions.query({name: 'microphone'})-->
+<!--                    .then(permission => permission.state === 'granted');-->
+<!--            }-->
+<!--                // 语音识别结束回调-->
+<!--                recognition.onend = function() {-->
+<!--                    if (isRecording) {-->
+<!--                        recognition.start();-->
+<!--                    }-->
+<!--                };-->
+<!--            } else {-->
+<!--                // 不支持语音识别-->
+<!--                voiceInputButton.disabled = true;-->
+<!--                voiceInputButton.title = "您的浏览器不支持语音识别功能";-->
+<!--                voiceInputButton.classList.add('opacity-50', 'cursor-not-allowed');-->
+<!--            }-->
+
+<!--            // 检查浏览器是否支持Web Audio API-->
+<!--            if ('AudioContext' in window || 'webkitAudioContext' in window) {-->
+<!--                audioContext = new (window.AudioContext || window.webkitAudioContext)();-->
+<!--            }-->
+
+<!--            // 加载快捷回复-->
+<!--            loadQuickReplies();-->
+
+<!--            // 绑定颜色选择按钮事件-->
+<!--            colorButtons.forEach(button => {-->
+<!--                button.addEventListener('click', function() {-->
+<!--                    const color = this.getAttribute('data-color');-->
+<!--                    changeBackgroundColor(color);-->
+<!--                });-->
+<!--            });-->
+
+<!--            // 语音输入按钮点击事件-->
+<!--            voiceInputButton.addEventListener('click', toggleVoiceInput);-->
+
+<!--            // 语音输出按钮点击事件-->
+<!--            voiceOutputButton.addEventListener('click', toggleVoiceOutput);-->
+
+<!--            // 发送消息函数-->
+<!--            function sendMessage() {-->
+<!--                const message = messageInput.value.trim();-->
+<!--                if (message === '') return;-->
+
+<!--                // 添加用户消息到聊天窗口-->
+<!--                appendMessage('user', message);-->
+
+<!--                // 分析用户情绪并改变背景颜色-->
+<!--                analyzeAndChangeColor(message);-->
+
+<!--                // 清空输入框-->
+<!--                messageInput.value = '';-->
+
+<!--                // 更新对话历史-->
+<!--                conversationHistory.push({-->
+<!--                    role: 'user',-->
+<!--                    content: message-->
+<!--                });-->
+
+<!--                // 滚动到底部-->
+<!--                scrollToBottom();-->
+
+<!--                // 显示"正在思考"状态-->
+<!--                showThinking();-->
+
+<!--                // 发送消息到后端API-->
+<!--                fetch('/api/chat', {-->
+<!--                    method: 'POST',-->
+<!--                    headers: {-->
+<!--                        'Content-Type': 'application/json'-->
+<!--                    },-->
+<!--                    body: JSON.stringify({-->
+<!--                        message: message,-->
+<!--                        history: conversationHistory-->
+<!--                    })-->
+<!--                })-->
+<!--                .then(response => response.json())-->
+<!--                .then(data => {-->
+<!--                    // 移除"正在思考"状态-->
+<!--                    removeThinking();-->
+
+<!--                    // 添加AI回复到聊天窗口-->
+<!--                    appendMessage('bot', data.reply, data.audio);-->
+
+<!--                    // 根据AI回复的情绪调整背景颜色-->
+<!--                    if (data.emotion) {-->
+<!--                        changeBackgroundColor(data.emotion);-->
+<!--                    }-->
+
+<!--                    // 更新对话历史-->
+<!--                    conversationHistory.push({-->
+<!--                        role: 'bot',-->
+<!--                        content: data.reply-->
+<!--                    });-->
+
+<!--                    // 滚动到底部-->
+<!--                    scrollToBottom();-->
+<!--                })-->
+<!--                .catch(error => {-->
+<!--                    console.error('Error:', error);-->
+<!--                    removeThinking();-->
+<!--                    appendMessage('bot', '抱歉，我遇到了一些技术问题，无法回答您的问题。请稍后再试。');-->
+<!--                    showNotification('网络错误，请检查您的网络连接');-->
+<!--                });-->
+<!--            }-->
+
+<!--            // 添加消息到聊天窗口-->
+<!--            function appendMessage(sender, message, audioData = null) {-->
+<!--                const messageDiv = document.createElement('div');-->
+<!--                messageDiv.className = `flex items-start mb-4 ${sender === 'user' ? 'justify-end' : ''}`;-->
+
+<!--                if (sender === 'user') {-->
+<!--                    messageDiv.innerHTML = `-->
+<!--                        <div class="message-bubble message-bubble-user">-->
+<!--                            <p>${message}</p>-->
+<!--                        </div>-->
+<!--                        <img src="{{ url_for('static', filename='res/img_1.png') }}" alt="用户头像" class="w-8 h-8 rounded-full ml-2 object-cover">-->
+<!--                    `;-->
+<!--                } else {-->
+<!--                    messageDiv.innerHTML = `-->
+<!--                        <img src="{{ url_for('static', filename='res/img.png') }}" alt="心理健康助手头像" class="w-8 h-8 rounded-full mr-2 object-cover">-->
+<!--                        <div class="message-bubble message-bubble-bot">-->
+<!--                            <p>${message}</p>-->
+<!--                            ${audioData ? `-->
+<!--                                <div class="audio-control">-->
+<!--                                    <button class="audio-button play-audio" data-audio="${audioData}">-->
+<!--                                        <i class="fa fa-play"></i>-->
+<!--                                    </button>-->
+<!--                                    <span>点击播放语音回复</span>-->
+<!--                                </div>-->
+<!--                            ` : ''}-->
+<!--                        </div>-->
+<!--                    `;-->
+<!--                }-->
+
+<!--                chatMessages.appendChild(messageDiv);-->
+
+<!--                // 为新添加的播放按钮绑定事件-->
+<!--                const playButtons = messageDiv.querySelectorAll('.play-audio');-->
+<!--                playButtons.forEach(button => {-->
+<!--                    button.addEventListener('click', function() {-->
+<!--                        const audioData = this.getAttribute('data-audio');-->
+<!--                        playAudio(audioData);-->
+<!--                    });-->
+<!--                });-->
+<!--            }-->
+
+<!--            // 显示"正在思考"状态-->
+<!--            function showThinking() {-->
+<!--                const thinkingDiv = document.createElement('div');-->
+<!--                thinkingDiv.className = 'flex items-start mb-4';-->
+<!--                thinkingDiv.id = 'thinking';-->
+<!--                thinkingDiv.innerHTML = `-->
+<!--                    <img src="{{ url_for('static', filename='res/img.png') }}" alt="心理健康助手头像" class="w-8 h-8 rounded-full mr-2 object-cover">-->
+<!--                    <div class="message-bubble message-bubble-bot">-->
+<!--                        <div class="flex space-x-1">-->
+<!--                            <div class="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>-->
+<!--                            <div class="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>-->
+<!--                            <div class="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                `;-->
+
+<!--                chatMessages.appendChild(thinkingDiv);-->
+<!--                scrollToBottom();-->
+<!--            }-->
+
+<!--            // 移除"正在思考"状态-->
+<!--            function removeThinking() {-->
+<!--                const thinkingDiv = document.getElementById('thinking');-->
+<!--                if (thinkingDiv) {-->
+<!--                    thinkingDiv.remove();-->
+<!--                }-->
+<!--            }-->
+
+<!--            // 滚动到底部-->
+<!--            function scrollToBottom() {-->
+<!--                chatMessages.scrollTop = chatMessages.scrollHeight;-->
+<!--            }-->
+
+<!--            // 加载快捷回复-->
+<!--            function loadQuickReplies() {-->
+<!--                fetch('/api/quick_replies')-->
+<!--                .then(response => response.json())-->
+<!--                .then(data => {-->
+<!--                    // 清空现有快捷回复-->
+<!--                    quickRepliesContainer.innerHTML = '';-->
+
+<!--                    // 添加新的快捷回复-->
+<!--                    Object.values(data).forEach(category => {-->
+<!--                        category.forEach(reply => {-->
+<!--                            const button = document.createElement('button');-->
+<!--                            button.className = 'quick-reply bg-white text-neutral px-4 py-2 rounded-full shadow hover:shadow-md transition-all text-sm';-->
+<!--                            button.textContent = reply;-->
+
+<!--                            button.addEventListener('click', function() {-->
+<!--                                messageInput.value = this.textContent.trim();-->
+<!--                                sendMessage();-->
+<!--                                // 分析快捷回复的情绪并改变背景颜色-->
+<!--                                analyzeAndChangeColor(this.textContent.trim());-->
+<!--                            });-->
+
+<!--                            quickRepliesContainer.appendChild(button);-->
+<!--                        });-->
+<!--                    });-->
+<!--                })-->
+<!--                .catch(error => {-->
+<!--                    console.error('Error loading quick replies:', error);-->
+<!--                    showNotification('加载快捷回复失败');-->
+<!--                });-->
+<!--            }-->
+
+<!--            // 绑定发送按钮点击事件-->
+<!--            sendButton.addEventListener('click', sendMessage);-->
+
+<!--            // 绑定回车键发送消息-->
+<!--            messageInput.addEventListener('keypress', function(e) {-->
+<!--                if (e.key === 'Enter') {-->
+<!--                    sendMessage();-->
+<!--                }-->
+<!--            });-->
+
+<!--            // 绑定信息和设置按钮事件-->
+<!--            infoButton.addEventListener('click', function() {-->
+<!--                alert('心理健康对话助手 v1.0\n\n本应用旨在提供情感支持和心理疏导，不能替代专业心理咨询服务。\n\n功能特点：\n- 文本聊天\n- 语音输入\n- 语音回复\n- 情绪识别与背景变化');-->
+<!--            });-->
+
+<!--            // 自动聚焦到输入框-->
+<!--            messageInput.focus();-->
+
+<!--            // 创建飘落元素-->
+<!--            createPetals();-->
+<!--        });-->
+
+<!--        // 语音输入切换函数-->
+<!--        function toggleVoiceInput() {-->
+<!--            if (!recognition) return;-->
+
+<!--            if (isRecording) {-->
+<!--                stopRecording();-->
+<!--            } else {-->
+<!--                startRecording();-->
+<!--            }-->
+<!--        }-->
+
+<!--        // 开始录音-->
+<!--        function startRecording() {-->
+<!--            isRecording = true;-->
+<!--            recognition.start();-->
+<!--            const voiceInputButton = document.getElementById('voice-input-button');-->
+<!--            voiceInputButton.classList.remove('voice-btn-inactive');-->
+<!--            voiceInputButton.classList.add('voice-btn-active');-->
+<!--            voiceInputButton.innerHTML = '<i class="fa fa-microphone-slash"></i>';-->
+<!--            voiceInputButton.title = "点击停止语音输入";-->
+<!--            showNotification('正在录音...');-->
+<!--        }-->
+
+<!--        // 停止录音-->
+<!--        function stopRecording() {-->
+<!--            isRecording = false;-->
+<!--            recognition.stop();-->
+<!--            const voiceInputButton = document.getElementById('voice-input-button');-->
+<!--            voiceInputButton.classList.remove('voice-btn-active');-->
+<!--            voiceInputButton.classList.add('voice-btn-inactive');-->
+<!--            voiceInputButton.innerHTML = '<i class="fa fa-microphone"></i>';-->
+<!--            voiceInputButton.title = "点击开始语音输入";-->
+<!--            hideNotification();-->
+<!--        }-->
+
+<!--        // 语音输出切换函数-->
+<!--        function toggleVoiceOutput() {-->
+<!--            const voiceOutputButton = document.getElementById('voice-output-button');-->
+
+<!--            if (isSpeaking) {-->
+<!--                // 停止朗读-->
+<!--                stopPlayingAudio();-->
+<!--                isSpeaking = false;-->
+<!--                voiceOutputButton.classList.remove('voice-btn-active');-->
+<!--                voiceOutputButton.classList.add('voice-btn-inactive');-->
+<!--                voiceOutputButton.title = "点击播放语音回复";-->
+<!--            } else {-->
+<!--                // 查找最新的AI回复-->
+<!--                const messages = document.querySelectorAll('.message-bubble-bot');-->
+<!--                if (messages.length > 0) {-->
+<!--                    const lastMessage = messages[messages.length - 1];-->
+<!--                    const playButton = lastMessage.querySelector('.play-audio');-->
+
+<!--                    if (playButton) {-->
+<!--                        const audioData = playButton.getAttribute('data-audio');-->
+<!--                        playAudio(audioData);-->
+<!--                        voiceOutputButton.classList.remove('voice-btn-inactive');-->
+<!--                        voiceOutputButton.classList.add('voice-btn-active');-->
+<!--                        voiceOutputButton.title = "点击停止播放语音";-->
+<!--                    } else {-->
+<!--                        showNotification('没有可播放的语音回复');-->
+<!--                    }-->
+<!--                }-->
+<!--            }-->
+<!--        }-->
+
+<!--        // 播放音频-->
+<!--        function playAudio(audioBase64) {-->
+<!--            stopPlayingAudio(); // 停止当前播放-->
+
+<!--            try {-->
+<!--                isSpeaking = true;-->
+<!--                const audioContext = new (window.AudioContext || window.webkitAudioContext)();-->
+
+<!--                // 解码Base64音频数据-->
+<!--                const binary = atob(audioBase64);-->
+<!--                const len = binary.length;-->
+<!--                const buffer = new ArrayBuffer(len);-->
+<!--                const view = new Uint8Array(buffer);-->
+
+<!--                for (let i = 0; i < len; i++) {-->
+<!--                    view[i] = binary.charCodeAt(i);-->
+<!--                }-->
+
+<!--                // 解码音频数据-->
+<!--                audioContext.decodeAudioData(buffer, function(audioBuffer) {-->
+<!--                    // 创建音频源-->
+<!--                    const source = audioContext.createBufferSource();-->
+<!--                    source.buffer = audioBuffer;-->
+
+<!--                    // 连接到目的地-->
+<!--                    source.connect(audioContext.destination);-->
+
+<!--                    // 开始播放-->
+<!--                    source.start();-->
+
+<!--                    // 播放结束时回调-->
+<!--                    source.onended = function() {-->
+<!--                        isSpeaking = false;-->
+<!--                        const voiceOutputButton = document.getElementById('voice-output-button');-->
+<!--                        voiceOutputButton.classList.remove('voice-btn-active');-->
+<!--                        voiceOutputButton.classList.add('voice-btn-inactive');-->
+<!--                        voiceOutputButton.title = "点击播放语音回复";-->
+<!--                    };-->
+<!--                }, function(error) {-->
+<!--                    console.error('音频解码错误:', error);-->
+<!--                    isSpeaking = false;-->
+<!--                    showNotification('语音播放失败');-->
+<!--                });-->
+<!--            } catch (error) {-->
+<!--                console.error('播放音频错误:', error);-->
+<!--                isSpeaking = false;-->
+<!--                showNotification('语音播放失败');-->
+<!--            }-->
+<!--        }-->
+
+<!--        // 停止播放音频-->
+<!--        function stopPlayingAudio() {-->
+<!--            if (audioContext) {-->
+<!--                audioContext.close();-->
+<!--                audioContext = new (window.AudioContext || window.webkitAudioContext)();-->
+<!--            }-->
+<!--            isSpeaking = false;-->
+<!--        }-->
+
+<!--        // 分析文本并改变背景颜色-->
+<!--        function analyzeAndChangeColor(text) {-->
+<!--            let emotion = 'neutral';-->
+
+<!--            // 检查文本中是否包含情绪关键词-->
+<!--            for (const [key, keywords] of Object.entries(emotionKeywords)) {-->
+<!--                if (keywords.some(word => text.includes(word))) {-->
+<!--                    emotion = key;-->
+<!--                    break;-->
+<!--                }-->
+<!--            }-->
+
+<!--            // 改变背景颜色-->
+<!--            changeBackgroundColor(emotion);-->
+<!--        }-->
+
+<!--        // 改变背景颜色-->
+<!--        function changeBackgroundColor(color) {-->
+<!--            const dynamicBg = document.getElementById('dynamic-bg');-->
+
+<!--            // 移除当前颜色类-->
+<!--            dynamicBg.classList.remove(`bg-${currentColor}`);-->
+
+<!--            // 添加新的颜色类-->
+<!--            dynamicBg.classList.add(`bg-${color}`);-->
+
+<!--            // 更新当前颜色-->
+<!--            currentColor = color;-->
+
+<!--            // 更新颜色选择按钮的激活状态-->
+<!--            document.querySelectorAll('.color-btn').forEach(btn => {-->
+<!--                if (btn.getAttribute('data-color') === color) {-->
+<!--                    btn.classList.add('ring-2', 'ring-primary', 'ring-offset-2');-->
+<!--                } else {-->
+<!--                    btn.classList.remove('ring-2', 'ring-primary', 'ring-offset-2');-->
+<!--                }-->
+<!--            });-->
+
+<!--            // 更新飘落元素颜色-->
+<!--                        // 更新飘落元素颜色-->
+<!--            updatePetalsColor();-->
+<!--        }-->
+
+<!--        // 更新飘落元素颜色-->
+<!--        function updatePetalsColor() {-->
+<!--            const petals = document.querySelectorAll('.petal');-->
+<!--            const colorMap = {-->
+<!--                calm: 'rgba(0, 188, 212, 0.2)',-->
+<!--                anxious: 'rgba(239, 83, 80, 0.2)',-->
+<!--                sad: 'rgba(158, 158, 158, 0.2)',-->
+<!--                happy: 'rgba(255, 152, 0, 0.2)',-->
+<!--                focused: 'rgba(76, 175, 80, 0.2)',-->
+<!--                neutral: 'rgba(150, 75, 0, 0.5)'-->
+<!--            };-->
+
+<!--            petals.forEach(petal => {-->
+<!--                petal.style.backgroundColor = colorMap[currentColor] || colorMap.neutral;-->
+<!--            });-->
+<!--        }-->
+
+<!--        // 创建飘落元素-->
+<!--        function createPetals() {-->
+<!--            const container = document.querySelector('.petals-container');-->
+<!--            const count = 50; // 增加初始落叶数量-->
+
+<!--            // 清空现有花瓣-->
+<!--            container.innerHTML = '';-->
+
+<!--            // 创建新花瓣-->
+<!--            for (let i = 0; i < count; i++) {-->
+<!--                createSinglePetal(container);-->
+<!--            }-->
+
+<!--            // 定期添加新花瓣-->
+<!--            setInterval(() => {-->
+<!--                createSinglePetal(container);-->
+<!--            }, 500); // 每500毫秒添加一个新花瓣，增加落叶密度-->
+<!--        }-->
+
+<!--        // 创建单个花瓣的函数-->
+<!--        function createSinglePetal(container) {-->
+<!--            const petal = document.createElement('div');-->
+<!--            petal.className = 'petal';-->
+
+<!--            // 根据当前背景颜色调整花瓣颜色-->
+<!--            const colorMap = {-->
+<!--                calm: 'rgba(0, 188, 212, 0.2)',-->
+<!--                anxious: 'rgba(239, 83, 80, 0.2)',-->
+<!--                sad: 'rgba(158, 158, 158, 0.2)',-->
+<!--                happy: 'rgba(255, 152, 0, 0.2)',-->
+<!--                focused: 'rgba(76, 175, 80, 0.2)',-->
+<!--                neutral: 'rgba(150, 75, 0, 0.5)' // 落叶颜色-->
+<!--            };-->
+
+<!--            const size = Math.random() * 20 + 10;-->
+<!--            const left = Math.random() * 100;-->
+<!--            const duration = Math.random() * 30 + 20;-->
+<!--            const delay = Math.random() * 10;-->
+
+<!--            petal.style.width = `${size}px`;-->
+<!--            petal.style.height = `${size * 0.6}px`;-->
+<!--            petal.style.left = `${left}%`;-->
+<!--            petal.style.animationDuration = `${duration}s`;-->
+<!--            petal.style.animationDelay = `${delay}s`;-->
+<!--            petal.style.backgroundColor = colorMap[currentColor] || colorMap.neutral;-->
+
+<!--            container.appendChild(petal);-->
+
+<!--            // 移除已完成动画的花瓣，并立即创建一个新的花瓣-->
+<!--            setTimeout(() => {-->
+<!--                if (petal.parentNode === container) {-->
+<!--                    container.removeChild(petal);-->
+<!--                    createSinglePetal(container);-->
+<!--                }-->
+<!--            }, duration * 1000);-->
+<!--        }-->
+
+<!--        // 显示通知-->
+<!--        function showNotification(message) {-->
+<!--            let notification = document.getElementById('notification');-->
+
+<!--            if (!notification) {-->
+<!--                notification = document.createElement('div');-->
+<!--                notification.id = 'notification';-->
+<!--                notification.className = 'fixed top-4 right-4 bg-primary text-white px-4 py-2 rounded-lg shadow-lg z-50 transform transition-all duration-300 opacity-0 translate-y-[-20px]';-->
+<!--                document.body.appendChild(notification);-->
+<!--            }-->
+
+<!--            notification.textContent = message;-->
+<!--            setTimeout(() => {-->
+<!--                notification.classList.remove('opacity-0', 'translate-y-[-20px]');-->
+<!--            }, 10);-->
+<!--        }-->
+
+<!--        // 隐藏通知-->
+<!--        function hideNotification() {-->
+<!--            const notification = document.getElementById('notification');-->
+<!--            if (notification) {-->
+<!--                notification.classList.add('opacity-0', 'translate-y-[-20px]');-->
+<!--                setTimeout(() => {-->
+<!--                    notification.remove();-->
+<!--                }, 300);-->
+<!--            }-->
+<!--        }-->
+
+<!--        // 设置按钮事件-->
+<!--        document.getElementById('settings-button').addEventListener('click', function() {-->
+<!--            const settingsPanel = document.createElement('div');-->
+<!--            settingsPanel.id = 'settings-panel';-->
+<!--            settingsPanel.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center';-->
+<!--            settingsPanel.innerHTML = `-->
+<!--                <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 transform transition-all duration-300 scale-95 opacity-0" id="settings-content">-->
+<!--                    <div class="flex justify-between items-center mb-4">-->
+<!--                        <h3 class="text-xl font-bold text-primary">设置</h3>-->
+<!--                        <button id="close-settings" class="text-gray-500 hover:text-gray-700">-->
+<!--                            <i class="fa fa-times"></i>-->
+<!--                        </button>-->
+<!--                    </div>-->
+
+<!--                    <div class="space-y-4">-->
+<!--                        <div>-->
+<!--                            <label class="block text-gray-700 mb-2">语音设置</label>-->
+<!--                            <div class="flex items-center space-x-4">-->
+<!--                                <label class="flex items-center">-->
+<!--                                    <input type="checkbox" id="auto-play" class="mr-2" checked>-->
+<!--                                    <span>自动播放语音回复</span>-->
+<!--                                </label>-->
+<!--                            </div>-->
+<!--                        </div>-->
+
+<!--                        <div>-->
+<!--                            <label class="block text-gray-700 mb-2">语音速度</label>-->
+<!--                            <input type="range" id="voice-speed" min="0.5" max="2" step="0.1" value="1" class="w-full">-->
+<!--                            <div class="flex justify-between text-xs text-gray-500 mt-1">-->
+<!--                                <span>慢</span>-->
+<!--                                <span>标准</span>-->
+<!--                                <span>快</span>-->
+<!--                            </div>-->
+<!--                        </div>-->
+
+<!--                        <div>-->
+<!--                            <label class="block text-gray-700 mb-2">背景效果</label>-->
+<!--                            <div class="flex items-center space-x-4">-->
+<!--                                <label class="flex items-center">-->
+<!--                                    <input type="checkbox" id="petals-effect" class="mr-2" checked>-->
+<!--                                    <span>显示飘落效果</span>-->
+<!--                                </label>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+
+<!--                    <div class="mt-6">-->
+<!--                        <button id="save-settings" class="w-full bg-primary text-white py-2 rounded-lg hover:bg-primary/90 transition-colors">-->
+<!--                            保存设置-->
+<!--                        </button>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            `;-->
+
+<!--            document.body.appendChild(settingsPanel);-->
+
+<!--            // 添加动画效果-->
+<!--            setTimeout(() => {-->
+<!--                document.getElementById('settings-content').classList.remove('scale-95', 'opacity-0');-->
+<!--            }, 10);-->
+
+<!--            // 关闭设置面板-->
+<!--            document.getElementById('close-settings').addEventListener('click', function() {-->
+<!--                const content = document.getElementById('settings-content');-->
+<!--                content.classList.add('scale-95', 'opacity-0');-->
+
+<!--                setTimeout(() => {-->
+<!--                    settingsPanel.remove();-->
+<!--                }, 300);-->
+<!--            });-->
+
+<!--            // 保存设置-->
+<!--            document.getElementById('save-settings').addEventListener('click', function() {-->
+<!--                // 这里可以保存设置到localStorage或发送到后端-->
+<!--                showNotification('设置已保存');-->
+
+<!--                const content = document.getElementById('settings-content');-->
+<!--                content.classList.add('scale-95', 'opacity-0');-->
+
+<!--                setTimeout(() => {-->
+<!--                    settingsPanel.remove();-->
+<!--                }, 300);-->
+<!--            });-->
+<!--        });-->
+<!--    </script>-->
+<!--</body>-->
+<!--</html>-->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心理健康对话助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5',
+                        secondary: '#EC4899',
+                        neutral: '#1F2937',
+                        'neutral-light': '#F3F4F6',
+                        calm: '#E0F7FA',     // 平静：淡蓝色
+                        anxious: '#FFEBEE',   // 焦虑：淡红色
+                        sad: '#ECEFF1',       // 悲伤：淡灰色
+                        happy: '#FFF3E0',     // 快乐：淡橙色
+                        focused: '#E8F5E9',   // 专注：淡绿色
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .message-bubble {
+                @apply rounded-lg p-4 max-w-[80%] my-2 transition-all duration-300;
+            }
+            .message-bubble-user {
+                @apply bg-primary text-white self-end rounded-br-none shadow-lg;
+            }
+            .message-bubble-bot {
+                @apply bg-white text-neutral self-start rounded-bl-none shadow-md;
+            }
+        }
+    </style>
+    <style>
+        /* 飘落元素动画 */
+        .petals-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .petal {
+            position: absolute;
+            background-color: rgba(150, 75, 0, 0.5); /* 落叶颜色 */
+            border-radius: 100% 0 100% 0; /* 落叶形状 */
+            transform: rotate(45deg); /* 旋转落叶 */
+            animation: falling linear forwards;
+        }
+
+        @keyframes falling {
+            0% {
+                transform: translateY(-10px) rotate(0deg);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(calc(100vh + 10px)) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* 动态背景 */
+        .dynamic-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            transition: background-color 2s ease; /* 平滑过渡效果 */
+        }
+
+        /* 语音播放控件 */
+        .audio-control {
+            @apply flex items-center space-x-2 mt-2 text-sm text-gray-600;
+        }
+
+        .audio-button {
+            @apply p-1.5 rounded-full hover:bg-gray-100 transition-colors;
+        }
+
+        .voice-loading {
+            @apply animate-spin;
+        }
+
+        /* 音量控制滑块样式 */
+        .volume-control {
+            @apply w-24 h-1 bg-gray-300 rounded-full appearance-none cursor-pointer;
+        }
+        .volume-control::-webkit-slider-thumb {
+            @apply appearance-none w-3 h-3 rounded-full bg-primary cursor-pointer;
+        }
+        .volume-control::-moz-range-thumb {
+            @apply w-3 h-3 rounded-full bg-primary cursor-pointer;
+        }
+
+        /* 语音按钮样式 */
+        .voice-btn {
+            @apply p-2 rounded-full hover:bg-gray-100 transition-colors flex items-center justify-center;
+        }
+        .voice-btn-inactive {
+            @apply bg-white text-gray-500 shadow-sm;
+        }
+        .voice-btn-active {
+            @apply bg-primary text-white shadow-md;
+        }
+
+        /* 设置面板样式 */
+        .settings-panel {
+            @apply fixed inset-0 bg-black/50 z-50 flex items-center justify-center;
+        }
+        .settings-content {
+            @apply bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 transform transition-all duration-300;
+        }
+    </style>
+</head>
+<body class="font-sans overflow-x-hidden">
+    <!-- 动态背景 -->
+    <div id="dynamic-bg" class="dynamic-bg bg-neutral"></div>
+
+    <!-- 飘落元素容器 -->
+    <div class="petals-container"></div>
+
+    <div class="container mx-auto px-4 py-8 max-w-4xl relative z-10">
+        <header class="text-center mb-8">
+            <h1 class="text-[clamp(2rem,5vw,3rem)] font-bold text-primary mb-2">心理健康对话助手</h1>
+            <p class="text-gray-600 max-w-2xl mx-auto">一个专注于心理健康支持的AI对话系统，随时为您提供专业的情感陪伴和心理疏导</p>
+
+            <!-- 背景颜色控制面板 -->
+            <div class="mt-4 flex justify-center space-x-2">
+                <button class="color-btn w-6 h-6 rounded-full bg-calm border-2 border-white shadow-md hover:scale-110 transition-transform" data-color="calm"></button>
+                <button class="color-btn w-6 h-6 rounded-full bg-anxious border-2 border-white shadow-md hover:scale-110 transition-transform" data-color="anxious"></button>
+                <button class="color-btn w-6 h-6 rounded-full bg-sad border-2 border-white shadow-md hover:scale-110 transition-transform" data-color="sad"></button>
+                <button class="color-btn w-6 h-6 rounded-full bg-happy border-2 border-white shadow-md hover:scale-110 transition-transform" data-color="happy"></button>
+                <button class="color-btn w-6 h-6 rounded-full bg-focused border-2 border-white shadow-md hover:scale-110 transition-transform" data-color="focused"></button>
+                <button class="color-btn w-6 h-6 rounded-full bg-neutral border-2 border-white shadow-md hover:scale-110 transition-transform" data-color="neutral"></button>
+            </div>
+        </header>
+
+        <!-- 主聊天区域，添加半透明类 -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all duration-300 hover:shadow-2xl chat-container">
+            <!-- 聊天头部 -->
+            <div class="bg-primary text-white p-4 flex items-center justify-between">
+                <div class="flex items-center">
+                    <img src="{{ url_for('static', filename='res/img.png') }}" alt="心理健康助手头像" class="w-10 h-10 rounded-full mr-3 object-cover">
+                    <div>
+                        <h2 class="font-semibold text-lg">心灵伙伴</h2>
+                        <p class="text-xs opacity-80">在线 - 随时为您服务</p>
+                    </div>
+                </div>
+                <div class="flex space-x-3">
+                    <button class="text-white hover:text-white/80 transition-colors" id="info-button">
+                        <i class="fa fa-info-circle"></i>
+                    </button>
+                    <button class="text-white hover:text-white/80 transition-colors" id="settings-button">
+                        <i class="fa fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 聊天消息区域 -->
+            <div id="chat-messages" class="h-[60vh] overflow-y-auto p-4 bg-neutral-light scrollbar-hide">
+                <!-- 欢迎消息 -->
+                <div class="flex items-start mb-4">
+                    <img src="{{ url_for('static', filename='res/img.png') }}" alt="心理健康助手头像" class="w-8 h-8 rounded-full mr-2 object-cover">
+                    <div class="message-bubble message-bubble-bot">
+                        <p>👋 你好！我是心灵伙伴，一个专注于心理健康的AI助手。</p>
+                        <p class="mt-1">今天想和我聊些什么？你可以和我分享你的感受、压力或者困惑，我会在这里支持你。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 输入区域 -->
+            <div class="p-4 border-t border-gray-200">
+                <div class="flex items-center space-x-2">
+                    <!-- 语音输入按钮 -->
+                    <button id="voice-input-button" class="voice-btn voice-btn-inactive" title="点击开始语音输入">
+                        <i class="fa fa-microphone"></i>
+                    </button>
+
+                    <input type="text" id="message-input" placeholder="输入你的问题..."
+                        class="flex-1 px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+
+                    <!-- 语音输出按钮 -->
+                    <button id="voice-output-button" class="voice-btn voice-btn-inactive" title="点击播放语音回复">
+                        <i class="fa fa-volume-up"></i>
+                    </button>
+
+                    <!-- 音量控制滑块 -->
+                    <div class="hidden md:flex items-center space-x-1" id="volume-control-container">
+                        <i class="fa fa-volume-down text-gray-500"></i>
+                        <input type="range" id="volume-control" min="0" max="1" step="0.1" value="0.7" class="volume-control">
+                        <i class="fa fa-volume-up text-gray-500"></i>
+                    </div>
+
+                    <button id="send-button" class="bg-primary text-white px-5 py-3 rounded-full hover:bg-primary/90 transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-300">
+                        <i class="fa fa-paper-plane mr-1"></i> 发送
+                    </button>
+                </div>
+                <div class="text-xs text-gray-500 mt-2 text-center">
+                    <i class="fa fa-lock mr-1"></i> 您的对话内容将被严格保密
+                </div>
+            </div>
+        </div>
+
+        <!-- 快捷回复按钮 -->
+        <div id="quick-replies" class="mt-6 flex flex-wrap gap-2 justify-center">
+            <!-- 快捷回复按钮将通过JavaScript动态加载 -->
+        </div>
+    </div>
+
+    <footer class="mt-12 text-center text-gray-500 text-sm pb-6 relative z-10">
+        <p>© 2025 心理健康对话助手 | 专业心理支持服务</p>
+        <p class="mt-1">如果您需要紧急帮助，请联系当地心理健康机构或拨打热线</p>
+    </footer>
+
+    <script>
+        // 情绪关键词映射
+        const emotionKeywords = {
+            calm: ['平静', '放松', '安心', '冥想', '深呼吸'],
+            anxious: ['焦虑', '担心', '紧张', '不安', '压力'],
+            sad: ['难过', '悲伤', '低落', '抑郁', '孤独'],
+            happy: ['开心', '快乐', '愉悦', '满意', '幸福'],
+            focused: ['专注', '集中', '清晰', '目标', '效率']
+        };
+
+        // 当前背景颜色
+        let currentColor = 'neutral';
+
+        // 语音识别和语音合成对象
+        let recognition = null;
+        let isRecording = false;
+        let isSpeaking = false;
+        let audioContext = null;
+        let conversationHistory = [];
+        let currentAudioBuffer = null;
+        let currentAudioSource = null;
+        let volume = 0.7; // 默认音量
+        let voiceSpeed = 1.0; // 默认语速
+        let autoPlayAudio = true; // 默认自动播放语音
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            const messageInput = document.getElementById('message-input');
+            const sendButton = document.getElementById('send-button');
+            const chatMessages = document.getElementById('chat-messages');
+            const quickRepliesContainer = document.getElementById('quick-replies');
+            const infoButton = document.getElementById('info-button');
+            const settingsButton = document.getElementById('settings-button');
+            const dynamicBg = document.getElementById('dynamic-bg');
+            const colorButtons = document.querySelectorAll('.color-btn');
+            const voiceInputButton = document.getElementById('voice-input-button');
+            const voiceOutputButton = document.getElementById('voice-output-button');
+            const volumeControl = document.getElementById('volume-control');
+            const volumeControlContainer = document.getElementById('volume-control-container');
+
+            // 检查浏览器是否支持语音识别
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                // 初始化语音识别对象
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                recognition.lang = 'zh-CN';
+
+                // 语音识别结果回调
+                recognition.onresult = function(event) {
+                    const transcript = Array.from(event.results)
+                        .map(result => result[0].transcript)
+                        .join('');
+
+                    messageInput.value = transcript;
+
+                    // 如果识别完成，则自动发送消息
+                    if (event.results[0].isFinal) {
+                        sendMessage();
+                    }
+                };
+
+                // 语音识别错误回调
+                recognition.onerror = function(event) {
+                    let errorMsg = '语音识别错误';
+                    if (event.error === 'not-allowed') {
+                        errorMsg = '请允许网站使用麦克风权限';
+                    } else if (event.error === 'audio-capture') {
+                        errorMsg = '无法获取音频输入，请检查麦克风';
+                    } else if (event.error === 'no-speech') {
+                        errorMsg = '未检测到语音，请重试';
+                    }
+                    console.error(errorMsg, event);
+                    stopRecording();
+                    showNotification(errorMsg);
+                };
+
+                // 语音识别结束回调
+                recognition.onend = function() {
+                    if (isRecording) {
+                        recognition.start();
+                    }
+                };
+            } else {
+                // 不支持语音识别
+                voiceInputButton.disabled = true;
+                voiceInputButton.title = "您的浏览器不支持语音识别功能";
+                voiceInputButton.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+
+            // 检查浏览器是否支持Web Audio API
+            if ('AudioContext' in window || 'webkitAudioContext' in window) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            // 加载快捷回复
+            loadQuickReplies();
+
+            // 绑定颜色选择按钮事件
+            colorButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const color = this.getAttribute('data-color');
+                    changeBackgroundColor(color);
+                });
+            });
+
+            // 语音输入按钮点击事件
+            voiceInputButton.addEventListener('click', toggleVoiceInput);
+
+            // 语音输出按钮点击事件
+            voiceOutputButton.addEventListener('click', toggleVoiceOutput);
+
+            // 音量控制事件
+            volumeControl.addEventListener('input', function() {
+                volume = parseFloat(this.value);
+                if (currentAudioSource) {
+                    currentAudioSource.gain.setValueAtTime(volume, audioContext.currentTime);
+                }
+            });
+
+            // 发送消息函数
+            function sendMessage() {
+                const message = messageInput.value.trim();
+                if (message === '') return;
+
+                // 添加用户消息到聊天窗口
+                appendMessage('user', message);
+
+                // 分析用户情绪并改变背景颜色
+                analyzeAndChangeColor(message);
+
+                // 清空输入框
+                messageInput.value = '';
+
+                // 更新对话历史
+                conversationHistory.push({
+                    role: 'user',
+                    content: message
+                });
+
+                // 滚动到底部
+                scrollToBottom();
+
+                // 显示"正在思考"状态
+                showThinking();
+
+                // 发送消息到后端API
+                fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        history: conversationHistory
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // 移除"正在思考"状态
+                    removeThinking();
+
+                    // 添加AI回复到聊天窗口
+                                        // 添加AI回复到聊天窗口
+                    appendMessage('bot', data.reply, data.audio);
+
+                    // 根据AI回复的情绪调整背景颜色
+                    if (data.emotion) {
+                        changeBackgroundColor(data.emotion);
+                    }
+
+                    // 更新对话历史
+                    conversationHistory.push({
+                        role: 'bot',
+                        content: data.reply
+                    });
+
+                    // 滚动到底部
+                    scrollToBottom();
+
+                    // 自动播放语音回复
+                    if (autoPlayAudio) {
+                        setTimeout(() => {
+                            // 查找最新的AI回复
+                            const messages = document.querySelectorAll('.message-bubble-bot');
+                            if (messages.length > 0) {
+                                const lastMessage = messages[messages.length - 1];
+                                const playButton = lastMessage.querySelector('.play-audio');
+
+                                if (playButton) {
+                                    const audioData = playButton.getAttribute('data-audio');
+                                    playAudio(audioData);
+                                    voiceOutputButton.classList.remove('voice-btn-inactive');
+                                    voiceOutputButton.classList.add('voice-btn-active');
+                                    voiceOutputButton.title = "点击停止播放语音";
+                                }
+                            }
+                        }, 500);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    removeThinking();
+                    appendMessage('bot', '抱歉，我遇到了一些技术问题，无法回答您的问题。请稍后再试。');
+                    showNotification('网络错误，请检查您的网络连接');
+                });
+            }
+
+            // 添加消息到聊天窗口
+            function appendMessage(sender, message, audioData = null) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `flex items-start mb-4 ${sender === 'user' ? 'justify-end' : ''}`;
+
+                if (sender === 'user') {
+                    messageDiv.innerHTML = `
+                        <div class="message-bubble message-bubble-user">
+                            <p>${message}</p>
+                        </div>
+                        <img src="{{ url_for('static', filename='res/img_1.png') }}" alt="用户头像" class="w-8 h-8 rounded-full ml-2 object-cover">
+                    `;
+                } else {
+                    messageDiv.innerHTML = `
+                        <img src="{{ url_for('static', filename='res/img.png') }}" alt="心理健康助手头像" class="w-8 h-8 rounded-full mr-2 object-cover">
+                        <div class="message-bubble message-bubble-bot">
+                            <p>${message}</p>
+                            ${audioData ? `
+                                <div class="audio-control">
+                                    <button class="audio-button play-audio" data-audio="${audioData}">
+                                        <i class="fa fa-play"></i>
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+
+                chatMessages.appendChild(messageDiv);
+
+                // 为新添加的播放按钮绑定事件
+                const playButtons = messageDiv.querySelectorAll('.play-audio');
+                playButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const audioData = this.getAttribute('data-audio');
+                        playAudio(audioData);
+                    });
+                });
+            }
+
+            // 显示"正在思考"状态
+            function showThinking() {
+                const thinkingDiv = document.createElement('div');
+                thinkingDiv.className = 'flex items-start mb-4';
+                thinkingDiv.id = 'thinking';
+                thinkingDiv.innerHTML = `
+                    <img src="{{ url_for('static', filename='res/img.png') }}" alt="心理健康助手头像" class="w-8 h-8 rounded-full mr-2 object-cover">
+                    <div class="message-bubble message-bubble-bot">
+                        <div class="flex space-x-1">
+                            <div class="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
+                            <div class="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
+                            <div class="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
+                        </div>
+                    </div>
+                `;
+
+                chatMessages.appendChild(thinkingDiv);
+                scrollToBottom();
+            }
+
+            // 移除"正在思考"状态
+            function removeThinking() {
+                const thinkingDiv = document.getElementById('thinking');
+                if (thinkingDiv) {
+                    thinkingDiv.remove();
+                }
+            }
+
+            // 滚动到底部
+            function scrollToBottom() {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            // 加载快捷回复
+            function loadQuickReplies() {
+                fetch('/api/quick_replies')
+                .then(response => response.json())
+                .then(data => {
+                    // 清空现有快捷回复
+                    quickRepliesContainer.innerHTML = '';
+
+                    // 添加新的快捷回复
+                    Object.values(data).forEach(category => {
+                        category.forEach(reply => {
+                            const button = document.createElement('button');
+                            button.className = 'quick-reply bg-white text-neutral px-4 py-2 rounded-full shadow hover:shadow-md transition-all text-sm';
+                            button.textContent = reply;
+
+                            button.addEventListener('click', function() {
+                                messageInput.value = this.textContent.trim();
+                                sendMessage();
+                                // 分析快捷回复的情绪并改变背景颜色
+                                analyzeAndChangeColor(this.textContent.trim());
+                            });
+
+                            quickRepliesContainer.appendChild(button);
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading quick replies:', error);
+                    showNotification('加载快捷回复失败');
+                });
+            }
+
+            // 绑定发送按钮点击事件
+            sendButton.addEventListener('click', sendMessage);
+
+            // 绑定回车键发送消息
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // 绑定信息和设置按钮事件
+            infoButton.addEventListener('click', function() {
+                alert('心理健康对话助手 v1.0\n\n本应用旨在提供情感支持和心理疏导，不能替代专业心理咨询服务。\n\n功能特点：\n- 文本聊天\n- 语音输入\n- 语音回复\n- 情绪识别与背景变化');
+            });
+
+            // 自动聚焦到输入框
+            messageInput.focus();
+
+            // 创建飘落元素
+            createPetals();
+
+            // 加载保存的设置
+            loadSettings();
+        });
+
+        // 语音输入切换函数
+        function toggleVoiceInput() {
+            if (!recognition) return;
+
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        // 开始录音
+        function startRecording() {
+            if (!checkMicrophonePermission()) {
+                requestMicrophonePermission();
+                return;
+            }
+
+            isRecording = true;
+            recognition.start();
+            const voiceInputButton = document.getElementById('voice-input-button');
+            voiceInputButton.classList.remove('voice-btn-inactive');
+            voiceInputButton.classList.add('voice-btn-active');
+            voiceInputButton.innerHTML = '<i class="fa fa-microphone-slash"></i>';
+            voiceInputButton.title = "点击停止语音输入";
+            showNotification('正在录音...');
+        }
+
+        // 停止录音
+        function stopRecording() {
+            isRecording = false;
+            recognition.stop();
+            const voiceInputButton = document.getElementById('voice-input-button');
+            voiceInputButton.classList.remove('voice-btn-active');
+            voiceInputButton.classList.add('voice-btn-inactive');
+            voiceInputButton.innerHTML = '<i class="fa fa-microphone"></i>';
+            voiceInputButton.title = "点击开始语音输入";
+            hideNotification();
+        }
+
+        // 检查麦克风权限
+        function checkMicrophonePermission() {
+            if (!recognition) return false;
+            // 现代浏览器使用Permissions API检查权限
+            if (navigator.permissions) {
+                return navigator.permissions.query({name: 'microphone'})
+                    .then(permission => permission.state === 'granted')
+                    .catch(() => false);
+            }
+            return false;
+        }
+
+        // 请求麦克风权限
+        function requestMicrophonePermission() {
+            if (!recognition) return;
+
+            // 明确触发权限请求
+            recognition.start().catch(error => {
+                if (error.name === 'NotAllowedError') {
+                    showNotification('请在浏览器设置中允许麦克风权限');
+                } else if (error.name === 'NotFoundError') {
+                    showNotification('未检测到麦克风设备，请检查连接');
+                } else {
+                    showNotification('无法获取麦克风权限，请重试');
+                }
+            });
+        }
+
+        // 语音输出切换函数
+        function toggleVoiceOutput() {
+        const voiceOutputButton = document.getElementById('voice-output-button');
+
+        if (isSpeaking) {
+            // 停止朗读
+            stopPlayingAudio();
+            isSpeaking = false;
+            voiceOutputButton.classList.remove('voice-btn-active');
+            voiceOutputButton.classList.add('voice-btn-inactive');
+            voiceOutputButton.title = "点击播放语音回复";
+        } else {
+            // 查找最新的AI回复
+            const messages = document.querySelectorAll('.message-bubble-bot');
+            if (messages.length > 0) {
+                const lastMessage = messages[messages.length - 1];
+                const playButton = lastMessage.querySelector('.play-audio');
+
+                if (playButton) {
+                    const audioData = playButton.getAttribute('data-audio');
+                    playAudio(audioData);
+                    voiceOutputButton.classList.remove('voice-btn-inactive');
+                    voiceOutputButton.classList.add('voice-btn-active');
+                    voiceOutputButton.title = "点击停止播放语音";
+                } else {
+                    showNotification('没有可播放的语音回复');
+                }
+            }
+        }
+        }
+
+
+
+        // 播放音频
+        // / 播放音频
+        function playAudio(audioBase64) {
+            stopPlayingAudio(); // 停止当前播放
+
+            try {
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+
+                isSpeaking = true;
+
+                // 解码Base64音频数据
+                const binary = atob(audioBase64);
+                const len = binary.length;
+                const buffer = new ArrayBuffer(len);
+                const view = new Uint8Array(buffer);
+
+                for (let i = 0; i < len; i++) {
+                    view[i] = binary.charCodeAt(i);
+                }
+
+                // 解码音频数据
+                audioContext.decodeAudioData(buffer, function(audioBuffer) {
+                    currentAudioBuffer = audioBuffer;
+
+                    // 创建音频源
+                    currentAudioSource = audioContext.createBufferSource();
+                    currentAudioSource.buffer = audioBuffer;
+
+                    // 创建音量控制节点
+                    const gainNode = audioContext.createGain();
+                    gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+
+                    // 应用语速设置
+                    currentAudioSource.playbackRate.setValueAtTime(
+                        voiceSpeed,
+                        audioContext.currentTime
+                    );
+
+                    // 连接节点
+                    currentAudioSource.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    // 开始播放
+                    currentAudioSource.start();
+
+                    // 播放结束时回调
+                    currentAudioSource.onended = function() {
+                        isSpeaking = false;
+                        const voiceOutputButton = document.getElementById('voice-output-button');
+                        voiceOutputButton.classList.remove('voice-btn-active');
+                        voiceOutputButton.classList.add('voice-btn-inactive');
+                        voiceOutputButton.title = "点击播放语音回复";
+                    };
+                }, function(error) {
+                    console.error('音频解码错误:', error);
+                    isSpeaking = false;
+                    showNotification('语音播放失败');
+                });
+            } catch (error) {
+                console.error('播放音频错误:', error);
+                isSpeaking = false;
+                showNotification('语音播放失败');
+            }
+        }
+
+        // 停止播放音频
+        function stopPlayingAudio() {
+            if (currentAudioSource) {
+                currentAudioSource.stop();
+                currentAudioSource = null;
+                currentAudioBuffer = null;
+            }
+
+            isSpeaking = false;
+        }
+        // 分析文本并改变背景颜色
+        function analyzeAndChangeColor(text) {
+            let emotion = 'neutral';
+
+            // 检查文本中是否包含情绪关键词
+            for (const [key, keywords] of Object.entries(emotionKeywords)) {
+                if (keywords.some(word => text.includes(word))) {
+                    emotion = key;
+                    break;
+                }
+            }
+
+            // 改变背景颜色
+            changeBackgroundColor(emotion);
+        }
+
+        // 改变背景颜色
+        function changeBackgroundColor(color) {
+            const dynamicBg = document.getElementById('dynamic-bg');
+
+            // 移除当前颜色类
+            dynamicBg.classList.remove(`bg-${currentColor}`);
+
+            // 添加新的颜色类
+            dynamicBg.classList.add(`bg-${color}`);
+
+            // 更新当前颜色
+            currentColor = color;
+
+            // 更新颜色选择按钮的激活状态
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                if (btn.getAttribute('data-color') === color) {
+                    btn.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+                } else {
+                    btn.classList.remove('ring-2', 'ring-primary', 'ring-offset-2');
+                }
+            });
+
+            // 更新飘落元素颜色
+            updatePetalsColor();
+        }
+
+        // 更新飘落元素颜色
+        function updatePetalsColor() {
+            const petals = document.querySelectorAll('.petal');
+            const colorMap = {
+                calm: 'rgba(0, 188, 212, 0.2)',
+                anxious: 'rgba(239, 83, 80, 0.2)',
+                sad: 'rgba(158, 158, 158, 0.2)',
+                happy: 'rgba(255, 152, 0, 0.2)',
+                focused: 'rgba(76, 175, 80, 0.2)',
+                neutral: 'rgba(150, 75, 0, 0.5)'
+            };
+
+            petals.forEach(petal => {
+                petal.style.backgroundColor = colorMap[currentColor] || colorMap.neutral;
+            });
+        }
+
+        // 创建飘落元素
+        function createPetals() {
+            const container = document.querySelector('.petals-container');
+            const count = 50; // 增加初始落叶数量
+
+            // 清空现有花瓣
+            container.innerHTML = '';
+
+            // 创建新花瓣
+            for (let i = 0; i < count; i++) {
+                createSinglePetal(container);
+            }
+
+            // 定期添加新花瓣
+            setInterval(() => {
+                createSinglePetal(container);
+            }, 500); // 每500毫秒添加一个新花瓣，增加落叶密度
+        }
+
+        // 创建单个花瓣的函数
+        function createSinglePetal(container) {
+            const petal = document.createElement('div');
+            petal.className = 'petal';
+
+            // 根据当前背景颜色调整花瓣颜色
+            const colorMap = {
+                calm: 'rgba(0, 188, 212, 0.2)',
+                anxious: 'rgba(239, 83, 80, 0.2)',
+                sad: 'rgba(158, 158, 158, 0.2)',
+                happy: 'rgba(255, 152, 0, 0.2)',
+                focused: 'rgba(76, 175, 80, 0.2)',
+                neutral: 'rgba(150, 75, 0, 0.5)' // 落叶颜色
+            };
+
+            const size = Math.random() * 20 + 10;
+            const left = Math.random() * 100;
+            const duration = Math.random() * 30 + 20;
+            const delay = Math.random() * 10;
+
+            petal.style.width = `${size}px`;
+            petal.style.height = `${size * 0.6}px`;
+            petal.style.left = `${left}%`;
+            petal.style.animationDuration = `${duration}s`;
+            petal.style.animationDelay = `${delay}s`;
+            petal.style.backgroundColor = colorMap[currentColor] || colorMap.neutral;
+
+            container.appendChild(petal);
+
+            // 移除已完成动画的花瓣，并立即创建一个新的花瓣
+            setTimeout(() => {
+                if (petal.parentNode === container) {
+                    container.removeChild(petal);
+                    createSinglePetal(container);
+                }
+            }, duration * 1000);
+        }
+
+        // 显示通知
+        function showNotification(message) {
+            let notification = document.getElementById('notification');
+
+            if (!notification) {
+                notification = document.createElement('div');
+                notification.id = 'notification';
+                notification.className = 'fixed top-4 right-4 bg-primary text-white px-4 py-2 rounded-lg shadow-lg z-50 transform transition-all duration-300 opacity-0 translate-y-[-20px]';
+                document.body.appendChild(notification);
+            }
+
+            notification.textContent = message;
+            setTimeout(() => {
+                notification.classList.remove('opacity-0', 'translate-y-[-20px]');
+            }, 10);
+        }
+
+        // 隐藏通知
+        function hideNotification() {
+            const notification = document.getElementById('notification');
+            if (notification) {
+                notification.classList.add('opacity-0', 'translate-y-[-20px]');
+                                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }
+        }
+
+        // 设置按钮事件
+        settingsButton.addEventListener('click', function() {
+            const settingsPanel = document.createElement('div');
+            settingsPanel.id = 'settings-panel';
+            settingsPanel.className = 'settings-panel';
+            settingsPanel.innerHTML = `
+                <div id="settings-content" class="settings-content scale-95 opacity-0">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-primary">设置</h3>
+                        <button id="close-settings" class="text-gray-500 hover:text-gray-700">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-gray-700 mb-2">语音设置</label>
+                            <div class="flex items-center space-x-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="auto-play" class="mr-2" ${autoPlayAudio ? 'checked' : ''}>
+                                    <span>自动播放语音回复</span>
+                                </label>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 mb-2 mt-2">语音速度</label>
+                                <input type="range" id="voice-speed" min="0.5" max="2" step="0.1" value="${voiceSpeed}" class="w-full">
+                                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>慢</span>
+                                    <span>标准</span>
+                                    <span>快</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-700 mb-2">背景效果</label>
+                            <div class="flex items-center space-x-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="petals-effect" class="mr-2" ${document.querySelector('.petals-container').classList.contains('hidden') ? '' : 'checked'}>
+                                    <span>显示飘落效果</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <button id="save-settings" class="w-full bg-primary text-white py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                            保存设置
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(settingsPanel);
+
+            // 添加动画效果
+            setTimeout(() => {
+                document.getElementById('settings-content').classList.remove('scale-95', 'opacity-0');
+            }, 10);
+
+            // 关闭设置面板
+            document.getElementById('close-settings').addEventListener('click', function() {
+                const content = document.getElementById('settings-content');
+                content.classList.add('scale-95', 'opacity-0');
+
+                setTimeout(() => {
+                    settingsPanel.remove();
+                }, 300);
+            });
+
+            // 保存设置
+            document.getElementById('save-settings').addEventListener('click', function() {
+                // 获取设置值
+                const autoPlay = document.getElementById('auto-play').checked;
+                const voiceSpeedValue = parseFloat(document.getElementById('voice-speed').value);
+                const petalsEffect = document.getElementById('petals-effect').checked;
+
+                // 保存到localStorage
+                localStorage.setItem('chatbot-settings', JSON.stringify({
+                    autoPlay,
+                    voiceSpeed: voiceSpeedValue,
+                    petalsEffect
+                }));
+
+                // 应用设置
+                autoPlayAudio = autoPlay;
+                voiceSpeed = voiceSpeedValue;
+
+                if (petalsEffect) {
+                    document.querySelector('.petals-container').classList.remove('hidden');
+                } else {
+                    document.querySelector('.petals-container').classList.add('hidden');
+                }
+
+                showNotification('设置已保存');
+
+                const content = document.getElementById('settings-content');
+                content.classList.add('scale-95', 'opacity-0');
+
+                setTimeout(() => {
+                    settingsPanel.remove();
+                }, 300);
+            });
+        });
+
+        // 加载保存的设置
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('chatbot-settings');
+
+            if (savedSettings) {
+                try {
+                    const settings = JSON.parse(savedSettings);
+
+                    // 恢复设置值
+                    autoPlayAudio = settings.autoPlay;
+                    voiceSpeed = settings.voiceSpeed;
+
+                    // 应用飘落效果设置
+                    if (settings.petalsEffect) {
+                        document.querySelector('.petals-container').classList.remove('hidden');
+                    } else {
+                        document.querySelector('.petals-container').classList.add('hidden');
+                    }
+                } catch (error) {
+                    console.error('加载设置失败:', error);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
